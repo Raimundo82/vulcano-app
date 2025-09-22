@@ -6,6 +6,9 @@
 	"image": "mcr.microsoft.com/devcontainers/python:1-3.12-bullseye",
 	"customizations": {
 		"vscode": {
+			"settings": {
+				"sonarlint.pathToNodeExecutable": "/usr/local/share/nvm/versions/node/v20.8.1/bin/node"
+			},
 			"extensions": [
 				"oderwat.indent-rainbow",
 				"ms-python.black-formatter",
@@ -13,11 +16,20 @@
 				"VisualStudioExptTeam.vscodeintellicode",
 				"VisualStudioExptTeam.intellicode-api-usage-examples",
 				"zeshuaro.vscode-python-poetry",
-				"redhat.vscode-yaml"
+				"redhat.vscode-yaml",
+				"tamasfe.even-better-toml",
+				"SonarSource.sonarlint-vscode",
+				"me-dutour-mathieu.vscode-github-actions",
+				"mtxr.sqltools",
+				"mtxr.sqltools-driver-pg"
 			]
 		}
 	},
-	"features": {},
+	"features": {
+		"ghcr.io/devcontainers/features/node:1": {
+			"version": "20.8.1",
+		}
+	},
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
