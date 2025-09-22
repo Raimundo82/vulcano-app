@@ -12,7 +12,8 @@
 				"njpwerner.autodocstring",
 				"VisualStudioExptTeam.vscodeintellicode",
 				"VisualStudioExptTeam.intellicode-api-usage-examples",
-				"zeshuaro.vscode-python-poetry"
+				"zeshuaro.vscode-python-poetry",
+				"redhat.vscode-yaml"
 			]
 		}
 	},
