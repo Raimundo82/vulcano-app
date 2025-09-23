@@ -166,6 +166,7 @@ config_dev.py
 
 # IDE's
 .vscode
+!.vscode/launch.json
 
 # Sonarlint
 .sonarlint
