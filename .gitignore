@@ -165,7 +165,7 @@ cython_debug/
 config_dev.py
 
 # IDE's
-.vscode
+.vscode/*
 !.vscode/launch.json
 
 # Sonarlint
