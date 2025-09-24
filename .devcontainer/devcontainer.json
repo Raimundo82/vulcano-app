@@ -54,7 +54,7 @@
 	},
 	"features": {
 		"ghcr.io/devcontainers/features/node:1": {
-			"version": "20.8.1",
+			"version": "20.8.1"
 		}
 	},
 	// Features to add to the dev container. More info: https: //containers.dev/features.
