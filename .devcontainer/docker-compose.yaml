@@ -7,6 +7,7 @@ services:
       dockerfile: .devcontainer/Dockerfile
 
     environment:
+      SECRET_KEY: ${SECRET_KEY}
       DB_NAME: ${DB_NAME}
       DB_HOST: db
       DB_USER: ${DB_USER}
