@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Faturas</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            /* max-width: 600px; */
+        }
+        .btn-custom {
+            margin: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+        }
+        .modal-content {
+            border-radius: 10px;
+            max-width: 600px
+        }
+        .modal-header {
+            background-color: #007bff;
+            color: #fff;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+        .modal-footer {
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+        .feedback-message {
+            margin-top: 1.5rem;
+        }
+        .modal-dialog {
+            max-width: 100%;
+        }
+        .img-container {
+            width: 100%;
+            margin-bottom: 1.5rem;
+        }
+        .img-container img {
+            width: 100%;
+            height: 550px;
+            object-fit: cover;
+            border-radius: 10px; /* Optional: Maintain rounded corners */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Adicionando a imagem acima do título -->
+        <div class="img-container">
+            <img src="{{ url_for('static', filename='imgs/Comms_moveis_MEO.jpg') }}" alt="Comms Móveis MEO">
+        </div>
+
+        <h2 class="mb-4">Gestão de Faturas MEO - Serviço Móvel</h2>
+        <div class="d-flex flex-column flex-md-row justify-content-center">
+            <!-- Botão "Carregar Faturas" em primeiro lugar -->
+            <button type="button" class="btn btn-info btn-custom" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                <i class="fas fa-upload"></i> Carregar Faturas
+            </button>
+            <a href="/process" class="btn btn-primary btn-custom">
+                <i class="fas fa-cogs"></i> Processar Faturas
+            </a>
+            <a href="/faturas" class="btn btn-success btn-custom">
+                <i class="fas fa-file-alt"></i> Faturas por Quitar
+            </a>
+            <!-- Novo botão "Ver Quitadas" -->
+            <a href="/quitadas" class="btn btn-primary btn-custom">
+                <i class="fas fa-check"></i> Faturas Quitadas
+            </a>
+            <!-- Novo botão "Quitar Faturas" -->
+            <a href="/users" class="btn btn-warning btn-custom">
+                <i class="fas fa-users"></i> Utilizadores
+            </a>
+            <!-- Novo botão "Unidades" -->
+            <a href="/units" class="btn btn-warning btn-custom">
+                <i class="fas fa-sitemap"></i> UEO
+            </a>
+            <!-- Botão de Logout -->
+            <a href="/logout" class="btn btn-danger btn-custom">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+
+        <!-- Mensagem de feedback abaixo dos botões -->
+        <div class="feedback-message">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <!-- Adiciona uma div com barra de rolagem para as mensagens -->
+                    <div style="max-height: 300px; overflow-y: auto; margin-top: 1rem; border: 1px solid #ddd; border-radius: 5px; padding: 10px;">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert" style="margin-bottom: 10px;">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+
+    <!-- Modal para Carregar Faturas -->
+    <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 600px;"> <!-- Largura máxima de 600px -->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="uploadModalLabel">Carregar Faturas</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="faturas" class="form-label">Selecione as faturas (PDF):</label>
+                            <input type="file" class="form-control" id="faturas" name="faturas" multiple accept=".pdf">
+                        </div>
+                        <div id="fileCount" class="text-muted">Nenhum arquivo selecionado.</div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="submit" form="uploadForm" class="btn btn-primary">Carregar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS e dependências -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+    <script>
+        // Atualiza o contador de arquivos selecionados
+        document.getElementById('faturas').addEventListener('change', function() {
+            const fileCount = this.files.length;
+            const fileCountDisplay = document.getElementById('fileCount');
+            if (fileCount > 0) {
+                fileCountDisplay.textContent = `${fileCount} arquivo(s) selecionado(s).`;
+            } else {
+                fileCountDisplay.textContent = 'Nenhum arquivo selecionado.';
+            }
+        });
+    </script>
+</body>
+</html>

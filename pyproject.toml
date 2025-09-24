@@ -1,5 +1,5 @@
 [project]
-name = "vulcano-app"
+name = "app"
 version = "0.1.0"
 description = "Application for managing telecommunications invoices"
 authors = [{ name = "m22600", email = "pacheco.raimundo@marinha.pt" }]
@@ -17,7 +17,7 @@ dependencies = [
 ]
 
 [tool.poetry]
-packages = [{ include = "vulcano_app", from = "src" }]
+packages = [{ include = "app", from = "src" }]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

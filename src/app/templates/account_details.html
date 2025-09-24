@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes da Conta {{ account_number }}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js Annotation Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.1/dist/chartjs-plugin-annotation.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 20px; /* Margem de 20px em todos os lados */
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%; /* Ocupa toda a largura disponível */
+        }
+        .card-header {
+            background-color: #007bff;
+            color: #fff;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+        .client-info {
+            font-size: 0.9rem;
+            margin-top: 5px;
+            color: #e0e0e0;
+        }
+        .btn-custom {
+            margin-top: 20px;
+        }
+        .container-fluid {
+            padding: 0 20px; /* Margem de 20px nas laterais */
+        }
+        .chart-container {
+            padding: 20px;
+            width: 100%;
+        }
+        #invoiceChart {
+            width: 100% !important;
+            height: 400px !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <h1 class="h4 mb-0">Detalhes da Conta: {{ account_number }}</h1>
+                {% if client %}
+                <div class="client-info">Cliente: {{ client }}</div>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <!-- Gráfico de Barras -->
+                    <canvas id="invoiceChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex justify-content-between mt-3">
+            <a href="/faturas" class="btn btn-secondary btn-custom">Voltar à Lista de Faturas</a>
+            <a href="/" class="btn btn-outline-secondary btn-custom">Voltar à Página Inicial</a>
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="{{ url_for('static', filename='js/jquery-3.7.1.min.js') }}"></script>
+    <!-- Bootstrap JS e dependências -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+
+    <script>
+        // Dados para o gráfico
+        const labels = {{ labels | tojson | safe }};
+        const amounts = {{ amounts | tojson | safe }};
+        const averageValue = {{ average_value | tojson | safe }};
+
+        // Configuração do gráfico
+        const ctx = document.getElementById('invoiceChart').getContext('2d');
+        const invoiceChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Valor a Pagar (€)',
+                    data: amounts,
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Valor: €${context.raw.toFixed(2)}`;
+                            }
+                        }
+                    },
+                    annotation: {
+                        annotations: {
+                            averageLine: {
+                                type: 'line',
+                                yMin: averageValue,
+                                yMax: averageValue,
+                                borderColor: 'rgb(255, 99, 132)',
+                                borderWidth: 2,
+                                borderDash: [6, 6],
+                                label: {
+                                    content: `Média: €${averageValue.toFixed(2)}`,
+                                    enabled: true,
+                                    position: 'right',
+                                    backgroundColor: 'rgba(255, 99, 132, 0.8)',
+                                    color: '#fff'
+                                }
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Valor a Pagar (€)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '€' + value.toFixed(2);
+                            }
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Data de Emissão'
+                        },
+                        reverse: false
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
