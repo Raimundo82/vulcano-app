@@ -3,7 +3,7 @@
 - `VS Code` with `Remote Explorer` extensions
 
 ### Env Variables
-- Create a .env file in .devcontainer folder with following keys:
+- Create a `.env` file in `.devcontainer` folder with following keys:
 ```sh
 DB_USER=vulcano
 DB_PASSWORD=<db password>
