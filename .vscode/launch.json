@@ -13,7 +13,7 @@
             },
             "args": [
                 "--app",
-                "vulcano_app.app",
+                "app.app",
                 "run",
                 "--debug"
             ],
