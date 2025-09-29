@@ -13,5 +13,5 @@ jobs:
         shell: bash
         run: |
           curl  -X POST \
-            '${{ vars.SONAR_HOST_URL }}/api/project_pull_requests/delete?project=sigdn-rh-stagging-api&pullRequest=${{ gitea.event.number }}' \
+            '${{ vars.SONAR_HOST_URL }}/api/project_pull_requests/delete?project=vulcano-app&pullRequest=${{ gitea.event.number }}' \
             --header 'Authorization: Bearer ${{ secrets.SONAR_TOKEN }}'
