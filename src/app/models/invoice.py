@@ -107,7 +107,6 @@ def extract_invoice_data(pdf_path):
     try:
         doc = fitz.open(pdf_path)
         text = "\n".join([page.get_text("text") for page in doc])
-
         invoice_number = re.search(r"FT MV/(\d+)", text)
         reference_number = re.search(r"Nº de Referência :\s*(\d+)", text)
         issue_date = extrair_data_emissao(pdf_path)
@@ -173,6 +172,21 @@ def verificar_tarifario(pdf_path, tarifario=Config.TARIFARIO):
     except Exception as e:
         print(f"Erro ao verificar tarifário no arquivo {pdf_path}: {e}")
         return False
+    
+def verificar_conta(pdf_path, contas=Config.BLM_CONTRACT_NUMBERS):
+    """Verifica se a conta especificada está presente no PDF."""
+    try:
+        documento = fitz.open(pdf_path)
+        for pagina in documento:
+            texto = pagina.get_text("text")
+            for conta in contas:  # percorre a lista de contas
+                if conta in texto:
+                    return True
+
+        return False
+    except Exception as e:
+        print(f"Erro ao verificar conta no arquivo {pdf_path}: {e}")
+        return False    
 
 
 def save_to_database(data):

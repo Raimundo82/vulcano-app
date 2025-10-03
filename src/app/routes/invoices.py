@@ -14,7 +14,7 @@ from datetime import datetime
 import os
 import shutil
 import tempfile
-from ..models.invoice import extract_invoice_data, save_to_database, verificar_tarifario
+from ..models.invoice import extract_invoice_data, save_to_database, verificar_tarifario, verificar_conta
 from ..utils.pdf_utils import generate_pdf_with_table
 from ..config import Config
 from app.db import get_connection
@@ -42,9 +42,9 @@ def upload_faturas():
         if file.filename.endswith(".pdf"):
             temp_path = os.path.join(tempfile.gettempdir(), file.filename)
             file.save(temp_path)
-
-            if verificar_tarifario(temp_path):
-                file_path = os.path.join("/app/pdfs", file.filename)
+            print(verificar_conta(temp_path))
+            if verificar_conta(temp_path):
+                file_path = os.path.join("src/app/pdfs", file.filename)
                 shutil.copy(temp_path, file_path)
                 uploaded_count += 1
                 flash(f"Fatura {file.filename} carregada com sucesso!", "success")
@@ -66,8 +66,8 @@ def upload_faturas():
 @invoices_bp.route("/process", methods=["GET"])
 @login_required
 def process_invoices():
-    pdf_folder = "/app/pdfs"
-    processed_folder = "/app/processed"
+    pdf_folder = "src/app/pdfs"
+    processed_folder = "src/app/processed"
     invoices_data = []
 
     for filename in os.listdir(pdf_folder):
