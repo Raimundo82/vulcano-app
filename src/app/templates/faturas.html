@@ -183,7 +183,23 @@
                     // { "data": "cvp" },
                     { "data": "invoice_period_year" },
                     { "data": "invoice_period_month" },
-                    { "data": "amount_to_pay" },
+                    
+                    {
+                    "data": "amount_to_pay",
+                    "render": function(data, type, row) {
+                        var amountToPay = parseFloat(data);
+                        var totalAmount = parseFloat(row.total_amount);
+                        if (amountToPay < totalAmount) {
+                            return `<span style="color: orange; font-weight: bold;">${data}</span>`;
+                        } else {
+                            return data;
+                        }
+                    }
+                    },
+
+
+
+
                     {
                         "data": "total_amount",
                         "render": function(data, type, row) {
