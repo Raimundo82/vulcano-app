@@ -14,7 +14,7 @@ from datetime import datetime
 import os
 import shutil
 import tempfile
-from ..models.invoice import extract_invoice_data, save_to_database, verificar_tarifario, verificar_conta
+from ..models.invoice import extract_invoice_data, save_to_database, verificar_tarifario, verificar_conta, extract_accont
 from ..utils.pdf_utils import generate_pdf_with_table
 from ..config import Config
 from app.db import get_connection
@@ -42,15 +42,15 @@ def upload_faturas():
         if file.filename.endswith(".pdf"):
             temp_path = os.path.join(tempfile.gettempdir(), file.filename)
             file.save(temp_path)
-            print(verificar_conta(temp_path))
-            if verificar_conta(temp_path):
+            conta_inf=verificar_conta(temp_path)
+            if conta_inf[0]:
                 file_path = os.path.join("pdfs", file.filename)
                 shutil.copy(temp_path, file_path)
                 uploaded_count += 1
                 flash(f"Fatura {file.filename} carregada com sucesso!", "success")
             else:
                 flash(
-                    f"Fatura {file.filename} não contém o tarifário MEO {Config.TARIFARIO}.",
+                    f"Fatura {file.filename} não carregada numero de conta {conta_inf[1]}.",
                     "warning",
                 )
                 os.remove(temp_path)

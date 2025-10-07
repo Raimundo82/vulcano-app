@@ -101,6 +101,8 @@ def extract_address_by_coordinates(pdf_path, coordinates):
         print(f"Erro ao extrair endereço por coordenadas: {e}")
         return None
 
+def extract_accont(text):
+    return re.search(r"Nº Conta:\s*(\d+)", text)
 
 def extract_invoice_data(pdf_path):
     """Extrai todos os dados da fatura do PDF."""
@@ -111,7 +113,7 @@ def extract_invoice_data(pdf_path):
         reference_number = re.search(r"Nº de Referência :\s*(\d+)", text)
         issue_date = extrair_data_emissao(pdf_path)
         taxpayer_number = extrair_contribuinte(pdf_path)
-        account_number = re.search(r"Nº Conta:\s*(\d+)", text)
+        account_number = extract_accont(text)
         client = extract_client_by_coordinates(pdf_path, fitz.Rect(310, 160, 550, 165))
         address = extract_address_by_coordinates(
             pdf_path, fitz.Rect(310, 170, 550, 230)
@@ -179,11 +181,12 @@ def verificar_conta(pdf_path, contas=Config.BLM_CONTRACT_NUMBERS):
         documento = fitz.open(pdf_path)
         for pagina in documento:
             texto = pagina.get_text("text")
+            conta=extract_accont(texto)
             for conta in contas:  # percorre a lista de contas
                 if conta in texto:
-                    return True
+                    return True, conta
 
-        return False
+        return False , conta
     except Exception as e:
         print(f"Erro ao verificar conta no arquivo {pdf_path}: {e}")
         return False    
