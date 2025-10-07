@@ -44,7 +44,7 @@ def upload_faturas():
             file.save(temp_path)
             print(verificar_conta(temp_path))
             if verificar_conta(temp_path):
-                file_path = os.path.join("src/app/pdfs", file.filename)
+                file_path = os.path.join("pdfs", file.filename)
                 shutil.copy(temp_path, file_path)
                 uploaded_count += 1
                 flash(f"Fatura {file.filename} carregada com sucesso!", "success")
@@ -66,8 +66,8 @@ def upload_faturas():
 @invoices_bp.route("/process", methods=["GET"])
 @login_required
 def process_invoices():
-    pdf_folder = "src/app/pdfs"
-    processed_folder = "src/app/processed"
+    pdf_folder = "pdfs"
+    processed_folder = "processed"
     invoices_data = []
 
     for filename in os.listdir(pdf_folder):
@@ -279,7 +279,8 @@ def get_quitadas():
 @invoices_bp.route("/processed/<path:filename>")
 @login_required
 def processed_files(filename):
-    return send_from_directory("/app/processed", filename)
+    print(os.path.abspath("processed"))
+    return send_from_directory("/workspaces/vulcano-app/processed", filename)
 
 
 @invoices_bp.route("/quitar-faturas", methods=["GET", "POST"])
