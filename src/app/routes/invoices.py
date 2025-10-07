@@ -323,7 +323,7 @@ def quitar_faturas():
             return response
 
         except Exception as err:  # Catch all exceptions
-            current_app.logger.error(f"Error in quitar_faturas: {str(err)}")
+            current_app.logger.error(f"Error in quitar_faturas: {str(err)}") 
             return jsonify({"error": "Erro interno no servidor"}), 500
 
     return redirect(url_for("invoices.index"))
@@ -448,7 +448,7 @@ def account_details(account_number):
 @invoices_bp.route("/faturas")
 @login_required
 def faturas():
-    return render_template("faturas.html")
+    return render_template("faturas.html",contas_blm=Config.BLM_CONTRACT_NUMBERS)
 
 
 @invoices_bp.route("/quitadas")
@@ -456,7 +456,7 @@ def faturas():
 def quitadas():
     try:
         is_admin = session.get("is_admin", 0)  # Now properly imported
-        return render_template("quitadas.html", is_admin=is_admin)
+        return render_template("quitadas.html", is_admin=is_admin, contas_blm=Config.BLM_CONTRACT_NUMBERS)
     except Exception as e:
         flash(f"Error accessing page: {str(e)}", "error")
         return redirect(url_for("invoices.index"))
