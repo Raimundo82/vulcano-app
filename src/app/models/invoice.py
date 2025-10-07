@@ -175,7 +175,7 @@ def verificar_tarifario(pdf_path, tarifario=Config.TARIFARIO):
         print(f"Erro ao verificar tarifário no arquivo {pdf_path}: {e}")
         return False
     
-def verificar_conta(pdf_path, contas=Config.BLM_CONTRACT_NUMBERS):
+def verificar_conta(pdf_path, contas=Config.BLM_CONTRACT_NUMBERS+Config.VOZ_CONTRACT_NUMBERS):
     """Verifica se a conta especificada está presente no PDF."""
     try:
         documento = fitz.open(pdf_path)
