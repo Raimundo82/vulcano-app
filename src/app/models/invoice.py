@@ -115,7 +115,11 @@ def extract_invoice_data(pdf_path):
         if conta_inf[0]:
             invoice_type ="BLM"
         else:
-            invoice_type= "VOZ"
+            conta_inf=verificar_conta(pdf_path, Config.VOZ_CONTRACT_NUMBERS)
+            if conta_inf[0]:
+                invoice_type= "VOZ"
+            else:
+                invoice_type="None"    
         
         invoice_number = re.search(r"FT MV/(\d+)", text)
         reference_number = re.search(r"Nº de Referência :\s*(\d+)", text)
