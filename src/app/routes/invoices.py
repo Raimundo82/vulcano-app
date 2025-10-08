@@ -76,7 +76,6 @@ def process_invoices():
             data = extract_invoice_data(pdf_path)
 
             if data:
-                data["pdffile"] = filename
                 if data["total_amount"]:
                     total_amount = float(data["total_amount"])
                 else:
@@ -97,8 +96,10 @@ def process_invoices():
                 )
                 destination_folder = os.path.join(processed_folder, year, month)
                 os.makedirs(destination_folder, exist_ok=True)
-
-                destination_path = os.path.join(destination_folder, filename)
+                
+                new_filename = f"{data["invoice_type"]}_{str(data["issue_date"])}_FT_{str(data["invoice_number"])}_{data["client"]}.pdf" 
+                destination_path = os.path.join(destination_folder, new_filename)
+                data["pdffile"] = new_filename
                 if os.path.exists(destination_path):
                     os.remove(destination_path)
 
@@ -279,7 +280,6 @@ def get_quitadas():
 @invoices_bp.route("/processed/<path:filename>")
 @login_required
 def processed_files(filename):
-    print(os.path.abspath("processed"))
     return send_from_directory("/workspaces/vulcano-app/processed", filename)
 
 

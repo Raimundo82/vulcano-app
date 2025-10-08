@@ -84,6 +84,7 @@ def extract_client_by_coordinates(pdf_path, coordinates):
         doc = fitz.open(pdf_path)
         page = doc[0]
         address = page.get_textbox(coordinates)
+        address = re.sub(r'[\\/:"*?<>|]+', '_', str(address))
         return address.strip() if address else None
     except Exception as e:
         print(f"Erro ao extrair cliente por coordenadas: {e}")
@@ -109,6 +110,13 @@ def extract_invoice_data(pdf_path):
     try:
         doc = fitz.open(pdf_path)
         text = "\n".join([page.get_text("text") for page in doc])
+        
+        conta_inf=verificar_conta(pdf_path, Config.BLM_CONTRACT_NUMBERS)
+        if conta_inf[0]:
+            invoice_type ="BLM"
+        else:
+            invoice_type= "VOZ"
+        
         invoice_number = re.search(r"FT MV/(\d+)", text)
         reference_number = re.search(r"Nº de Referência :\s*(\d+)", text)
         issue_date = extrair_data_emissao(pdf_path)
@@ -134,6 +142,7 @@ def extract_invoice_data(pdf_path):
         )
 
         return {
+            "invoice_type":invoice_type ,
             "invoice_number": invoice_number.group(1) if invoice_number else None,
             "reference_number": reference_number.group(1) if reference_number else None,
             "issue_date": issue_date,
