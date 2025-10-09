@@ -84,6 +84,7 @@
                     <table id="faturasTable" class="display" style="width:100%">
                         <thead>
                             <tr>
+                                <th>Tipo</th>
                                 <th>Fatura</th>
                                 <th>Emissão</th>
                                 <th>NIC</th>
@@ -142,6 +143,9 @@
                 "dataSrc": ""
             },
             "columns": [
+
+                { "data": "invoice_type"},
+
                 {
                     "data": "invoice_number",
                     "render": function(data, type, row) {
