@@ -120,6 +120,7 @@ def get_faturas():
         cursor.execute(
             """
             SELECT
+                invoice_type,
                 invoice_number,
                 issue_date,
                 taxpayer_number,
