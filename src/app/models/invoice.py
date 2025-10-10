@@ -221,7 +221,7 @@ def save_to_database(data):
         if existing_invoice:
             update_query = """
             UPDATE invoices
-            SET issue_date = %s, taxpayer_number = %s, account_number = %s, client = %s, address = %s, cvp = %s,
+            SET invoice_type = %s,issue_date = %s, taxpayer_number = %s, account_number = %s, client = %s, address = %s, cvp = %s,
                 invoice_period_month = %s, invoice_period_year = %s, total_amount = %s, amount_to_pay = %s,
                 sent_validar = %s, quitar = %s, pdffile = %s
             WHERE invoice_number = %s
@@ -229,6 +229,7 @@ def save_to_database(data):
             cursor.execute(
                 update_query,
                 (
+                    data["invoice_type"],
                     data["issue_date"],
                     data["taxpayer_number"],
                     data["account_number"],
@@ -247,12 +248,13 @@ def save_to_database(data):
             )
         else:
             insert_query = """
-            INSERT INTO invoices (invoice_number, issue_date, taxpayer_number, account_number, client, address, cvp, invoice_period_month, invoice_period_year, total_amount, amount_to_pay, sent_validar, quitar, pdffile)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO invoices (invoice_type, invoice_number, issue_date, taxpayer_number, account_number, client, address, cvp, invoice_period_month, invoice_period_year, total_amount, amount_to_pay, sent_validar, quitar, pdffile)
+            VALUES (%s,%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
             cursor.execute(
                 insert_query,
                 (
+                    data["invoice_type"],
                     data["invoice_number"],
                     data["issue_date"],
                     data["taxpayer_number"],
