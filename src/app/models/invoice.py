@@ -84,7 +84,7 @@ def extract_client_by_coordinates(pdf_path, coordinates):
         doc = fitz.open(pdf_path)
         page = doc[0]
         address = page.get_textbox(coordinates)
-        address = re.sub(r'[\\/:"*?<>|]+', '_', str(address))
+        address = re.sub(r'[\\/:"*?<>|]+', "_", str(address))
         return address.strip() if address else None
     except Exception as e:
         print(f"Erro ao extrair cliente por coordenadas: {e}")
@@ -102,30 +102,32 @@ def extract_address_by_coordinates(pdf_path, coordinates):
         print(f"Erro ao extrair endereço por coordenadas: {e}")
         return None
 
-def extract_accont(text):
+
+def extract_account(text):
     return re.search(r"Nº Conta:\s*(\d+)", text)
+
 
 def extract_invoice_data(pdf_path):
     """Extrai todos os dados da fatura do PDF."""
     try:
         doc = fitz.open(pdf_path)
         text = "\n".join([page.get_text("text") for page in doc])
-        
-        conta_inf=verificar_conta(pdf_path, Config.BLM_CONTRACT_NUMBERS)
+
+        conta_inf = verificar_conta(pdf_path, Config.BLM_CONTRACT_NUMBERS)
         if conta_inf[0]:
-            invoice_type ="BLM"
+            invoice_type = "BLM"
         else:
-            conta_inf=verificar_conta(pdf_path, Config.VOZ_CONTRACT_NUMBERS)
+            conta_inf = verificar_conta(pdf_path, Config.VOZ_CONTRACT_NUMBERS)
             if conta_inf[0]:
-                invoice_type= "VOZ"
+                invoice_type = "VOZ"
             else:
-                invoice_type="None"    
-        
+                invoice_type = "None"
+
         invoice_number = re.search(r"FT MV/(\d+)", text)
         reference_number = re.search(r"Nº de Referência :\s*(\d+)", text)
         issue_date = extrair_data_emissao(pdf_path)
         taxpayer_number = extrair_contribuinte(pdf_path)
-        account_number = extract_accont(text)
+        account_number = extract_account(text)
         client = extract_client_by_coordinates(pdf_path, fitz.Rect(310, 160, 550, 165))
         address = extract_address_by_coordinates(
             pdf_path, fitz.Rect(310, 170, 550, 230)
@@ -146,7 +148,7 @@ def extract_invoice_data(pdf_path):
         )
 
         return {
-            "invoice_type":invoice_type ,
+            "invoice_type": invoice_type,
             "invoice_number": invoice_number.group(1) if invoice_number else None,
             "reference_number": reference_number.group(1) if reference_number else None,
             "issue_date": issue_date,
@@ -187,22 +189,26 @@ def verificar_tarifario(pdf_path, tarifario=Config.TARIFARIO):
     except Exception as e:
         print(f"Erro ao verificar tarifário no arquivo {pdf_path}: {e}")
         return False
-    
-def verificar_conta(pdf_path, contas=Config.BLM_CONTRACT_NUMBERS+Config.VOZ_CONTRACT_NUMBERS):
+
+
+def verificar_conta(
+    pdf_path, contas=Config.BLM_CONTRACT_NUMBERS + Config.VOZ_CONTRACT_NUMBERS
+):
     """Verifica se a conta especificada está presente no PDF."""
     try:
         documento = fitz.open(pdf_path)
         for pagina in documento:
             texto = pagina.get_text("text")
-            conta=extract_accont(texto)
+
+            conta_extr = extract_account(texto)
             for conta in contas:  # percorre a lista de contas
                 if conta in texto:
                     return True, conta
+        return False, conta_extr
 
-        return False , conta
     except Exception as e:
         print(f"Erro ao verificar conta no arquivo {pdf_path}: {e}")
-        return False    
+        return False
 
 
 def save_to_database(data):
