@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,39 +13,56 @@
         body {
             font-family: Arial, sans-serif;
             background-color: #f8f9fa;
-            margin: 20px; /* Margem de 20px em todos os lados */
+            margin: 20px;
+            /* Margem de 20px em todos os lados */
         }
+
         .card {
             border: none;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            width: 100%; /* Ocupa toda a largura disponível */
+            width: 100%;
+            /* Ocupa toda a largura disponível */
         }
+
         .card-header {
             background-color: #007bff;
             color: #fff;
             border-top-left-radius: 10px;
             border-top-right-radius: 10px;
         }
+
         .dataTables_wrapper {
             padding: 20px;
         }
+
         .dataTables_filter input {
             border-radius: 5px;
             border: 1px solid #ddd;
             padding: 5px;
         }
+
         .btn-custom {
             margin-top: 20px;
         }
+
         .container-fluid {
-            padding: 0 20px; /* Margem de 20px nas laterais */
+            padding: 0 20px;
+            /* Margem de 20px nas laterais */
         }
+
         .table-responsive {
-            width: 100%; /* Ocupa toda a largura disponível */
+            width: 100%;
+            /* Ocupa toda a largura disponível */
+        }
+
+        .cliente-destaque {
+            color: blue;
+            font-weight: bold;
         }
     </style>
 </head>
+
 <body>
     <div class="container-fluid">
         <div class="card">
@@ -75,6 +93,7 @@
                     <table id="faturasTable" class="display" style="width:100%">
                         <thead>
                             <tr>
+                                <th>Tipo</th>
                                 <th>Fatura</th>
                                 <th>Emissão</th>
                                 <th>NIC</th>
@@ -122,22 +141,28 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        $(document).ready(function() {
+        const contasBLM = {{ contas_blm | tojson | safe}};
+    </script>
+
+    <script>
+        $(document).ready(function () {
             var table = $('#faturasTable').DataTable({
                 "ajax": {
                     "url": "/api/faturas",
                     "dataSrc": ""
                 },
                 "columns": [
+
+                    { "data": "invoice_type" },
                     {
                         "data": "invoice_number",
-                        "render": function(data, type, row) {
+                        "render": function (data, type, row) {
                             return `<a href="/processed/${row.invoice_period_year}/${row.invoice_period_month}/${row.pdffile}" target="_blank">${data}</a>`;
                         }
                     },
                     {
                         "data": "issue_date",
-                        "render": function(data, type, row) {
+                        "render": function (data, type, row) {
                             // Formata a data para o formato dd/mm/aaaa
                             if (data) {
                                 const date = new Date(data);
@@ -152,18 +177,49 @@
                     { "data": "taxpayer_number" },
                     {
                         "data": "account_number",
-                        "render": function(data, type, row) {
+                        "render": function (data, type, row) {
                             return `<a href="/account/${data}">${data}</a>`;
                         }
                     },
-                    { "data": "client" },
+
+                    {
+                        "data": "client",
+                        "render": function (data, type, row) {
+                            return contasBLM.includes(row.account_number)
+                                ? `<span class="cliente-destaque">${data}</span>`
+                                : data;
+                        }
+
+                    },
+
+
+
+
+
+
                     // { "data": "cvp" },
                     { "data": "invoice_period_year" },
                     { "data": "invoice_period_month" },
-                    { "data": "amount_to_pay" },
+
+                    {
+                        "data": "amount_to_pay",
+                        "render": function (data, type, row) {
+                            var amountToPay = parseFloat(data);
+                            var totalAmount = parseFloat(row.total_amount);
+                            if (amountToPay < totalAmount) {
+                                return `<span style="color: orange; font-weight: bold;">${data}</span>`;
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+
+
+
+
                     {
                         "data": "total_amount",
-                        "render": function(data, type, row) {
+                        "render": function (data, type, row) {
                             // Convert data and media to floats for comparison
                             var totalAmount = parseFloat(data);
                             var media = parseFloat(row.media);
@@ -178,20 +234,20 @@
                     },
                     {
                         "data": "media",
-                        "render": function(data, type, row) {
+                        "render": function (data, type, row) {
                             // Formata o valor da média para 2 casas decimais
                             return data ? `${parseFloat(data).toFixed(2)}` : "N/A";
                         }
                     },
                     {
                         "data": "sent_validar",
-                        "render": function(data) {
+                        "render": function (data) {
                             return data ? "Sim" : "Não";
                         }
                     },
                     {
                         "data": "quitar",
-                        "render": function(data, type, row) {
+                        "render": function (data, type, row) {
                             return `<input type="checkbox" class="quitarCheckbox" data-invoice-number="${row.invoice_number}" ${data ? 'checked' : ''}>`;
                         }
                     }
@@ -204,7 +260,7 @@
             // Atualiza o total mensal
             function updateTotalMensal() {
                 var total = 0;
-                table.rows({ search: 'applied' }).data().each(function(row) {
+                table.rows({ search: 'applied' }).data().each(function (row) {
                     if (row.total_amount) {
                         total += parseFloat(row.total_amount);
                     }
@@ -213,29 +269,29 @@
             }
 
             // Filtros de Ano e Mês
-            $('#ano, #mes').on('change', function() {
+            $('#ano, #mes').on('change', function () {
                 var ano = $('#ano').val();
                 var mes = $('#mes').val();
-                table.column(5).search(ano).column(6).search(mes).draw();
+                table.column(6).search(ano).column(7).search(mes).draw();
                 updateTotalMensal();
             });
 
             // Carrega os anos e meses disponíveis
-            $.get("/api/faturas", function(data) {
+            $.get("/api/faturas", function (data) {
                 var anos = [...new Set(data.map(item => item.invoice_period_year))];
                 var meses = [...new Set(data.map(item => item.invoice_period_month))];
 
-                anos.forEach(function(ano) {
+                anos.forEach(function (ano) {
                     $('#ano').append(`<option value="${ano}">${ano}</option>`);
                 });
 
-                meses.forEach(function(mes) {
+                meses.forEach(function (mes) {
                     $('#mes').append(`<option value="${mes}">${mes}</option>`);
                 });
             });
 
             // Atualiza o status de "Quitar" ao alterar a caixa de seleção
-            $('#faturasTable').on('change', '.quitarCheckbox', function() {
+            $('#faturasTable').on('change', '.quitarCheckbox', function () {
                 var invoiceNumber = $(this).data('invoice-number');
                 var isQuitado = $(this).is(':checked');
 
@@ -244,32 +300,32 @@
                     method: 'PUT',
                     contentType: 'application/json',
                     data: JSON.stringify({ quitar: isQuitado }),
-                    success: function(response) {
+                    success: function (response) {
                         console.log('Status de "Quitar" atualizado com sucesso!'); // Log no console
                     },
-                    error: function() {
+                    error: function () {
                         console.error('Erro ao atualizar o status de "Quitar".'); // Log de erro no console
                     }
                 });
             });
 
             // Marcar/Desmarcar todos os checkboxes visíveis
-            $('#quitarTodos').on('change', function() {
+            $('#quitarTodos').on('change', function () {
                 var isChecked = $(this).is(':checked');
                 table.rows({ search: 'applied' }).nodes().to$().find('.quitarCheckbox').prop('checked', isChecked);
 
                 // Atualiza o status de "Quitar" para todos os checkboxes marcados/desmarcados
-                table.rows({ search: 'applied' }).data().each(function(row) {
+                table.rows({ search: 'applied' }).data().each(function (row) {
                     var invoiceNumber = row.invoice_number;
                     $.ajax({
                         url: `/api/faturas/${invoiceNumber}/quitar`,
                         method: 'PUT',
                         contentType: 'application/json',
                         data: JSON.stringify({ quitar: isChecked }),
-                        success: function(response) {
+                        success: function (response) {
                             console.log(`Status de "Quitar" atualizado para a fatura ${invoiceNumber}`);
                         },
-                        error: function() {
+                        error: function () {
                             console.log(`Erro ao atualizar o status de "Quitar" para a fatura ${invoiceNumber}`);
                         }
                     });
@@ -277,16 +333,16 @@
             });
 
             // Botão para gerar o PDF de quitação
-            $('#gerarQuitacao').on('click', function() {
+            $('#gerarQuitacao').on('click', function () {
                 // Abre o PDF de quitação em uma nova aba
                 window.open('/quitar-faturas', '_blank');
             });
 
 
-            $('#quitarMarcadas').on('click', function() {
+            $('#quitarMarcadas').on('click', function () {
                 // Coletar as faturas marcadas na interface
                 var faturasMarcadas = [];
-                table.rows({ search: 'applied' }).nodes().to$().find('.quitarCheckbox:checked').each(function() {
+                table.rows({ search: 'applied' }).nodes().to$().find('.quitarCheckbox:checked').each(function () {
                     var invoiceNumber = $(this).data('invoice-number');
                     faturasMarcadas.push(invoiceNumber);
                 });
@@ -302,7 +358,7 @@
                     method: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify({ faturas: faturasMarcadas }),
-                    success: function(response) {
+                    success: function (response) {
                         // Abre o PDF gerado em uma nova aba
                         var blob = new Blob([response], { type: 'application/pdf' });
                         var url = URL.createObjectURL(blob);
@@ -311,14 +367,14 @@
                         // Redireciona para a página index.html após abrir o PDF
                         window.location.href = '/';
                     },
-                    error: function(xhr, status, error) {
+                    error: function (xhr, status, error) {
                         alert('Erro ao gerar o PDF de quitação.');
                         console.error(error);
                     }
                 });
             });
 
-            $('#voltarInicio').on('click', function(e) {
+            $('#voltarInicio').on('click', function (e) {
                 e.preventDefault();
 
                 // Check if any invoices are selected
@@ -338,7 +394,7 @@
                             $('.quitarCheckbox:checked').prop('checked', false);
 
                             // Update server for each
-                            $('.quitarCheckbox').each(function() {
+                            $('.quitarCheckbox').each(function () {
                                 var invoiceNumber = $(this).data('invoice-number');
                                 $.ajax({
                                     url: `/api/faturas/${invoiceNumber}/quitar`,
@@ -358,10 +414,11 @@
             });
 
             // Atualiza o total mensal ao carregar a página
-            table.on('draw', function() {
+            table.on('draw', function () {
                 updateTotalMensal();
             });
         });
     </script>
 </body>
+
 </html>

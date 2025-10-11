@@ -170,3 +170,5 @@ config_dev.py
 
 # Sonarlint
 .sonarlint
+pdfs/
+processed/

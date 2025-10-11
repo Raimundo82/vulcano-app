@@ -84,6 +84,7 @@ def extract_client_by_coordinates(pdf_path, coordinates):
         doc = fitz.open(pdf_path)
         page = doc[0]
         address = page.get_textbox(coordinates)
+        address = re.sub(r'[\\/:"*?<>|]+', "_", str(address))
         return address.strip() if address else None
     except Exception as e:
         print(f"Erro ao extrair cliente por coordenadas: {e}")
@@ -102,17 +103,31 @@ def extract_address_by_coordinates(pdf_path, coordinates):
         return None
 
 
+def extract_account(text):
+    return re.search(r"Nº Conta:\s*(\d+)", text)
+
+
 def extract_invoice_data(pdf_path):
     """Extrai todos os dados da fatura do PDF."""
     try:
         doc = fitz.open(pdf_path)
         text = "\n".join([page.get_text("text") for page in doc])
 
+        conta_inf = verificar_conta(pdf_path, Config.BLM_CONTRACT_NUMBERS)
+        if conta_inf[0]:
+            invoice_type = "BLM"
+        else:
+            conta_inf = verificar_conta(pdf_path, Config.VOZ_CONTRACT_NUMBERS)
+            if conta_inf[0]:
+                invoice_type = "VOZ"
+            else:
+                invoice_type = "None"
+
         invoice_number = re.search(r"FT MV/(\d+)", text)
         reference_number = re.search(r"Nº de Referência :\s*(\d+)", text)
         issue_date = extrair_data_emissao(pdf_path)
         taxpayer_number = extrair_contribuinte(pdf_path)
-        account_number = re.search(r"Nº Conta:\s*(\d+)", text)
+        account_number = extract_account(text)
         client = extract_client_by_coordinates(pdf_path, fitz.Rect(310, 160, 550, 165))
         address = extract_address_by_coordinates(
             pdf_path, fitz.Rect(310, 170, 550, 230)
@@ -133,6 +148,7 @@ def extract_invoice_data(pdf_path):
         )
 
         return {
+            "invoice_type": invoice_type,
             "invoice_number": invoice_number.group(1) if invoice_number else None,
             "reference_number": reference_number.group(1) if reference_number else None,
             "issue_date": issue_date,
@@ -175,6 +191,26 @@ def verificar_tarifario(pdf_path, tarifario=Config.TARIFARIO):
         return False
 
 
+def verificar_conta(
+    pdf_path, contas=Config.BLM_CONTRACT_NUMBERS + Config.VOZ_CONTRACT_NUMBERS
+):
+    """Verifica se a conta especificada está presente no PDF."""
+    try:
+        documento = fitz.open(pdf_path)
+        for pagina in documento:
+            texto = pagina.get_text("text")
+
+            conta_extr = extract_account(texto)
+            for conta in contas:  # percorre a lista de contas
+                if conta in texto:
+                    return True, conta
+        return False, conta_extr
+
+    except Exception as e:
+        print(f"Erro ao verificar conta no arquivo {pdf_path}: {e}")
+        return False
+
+
 def save_to_database(data):
     """Salva os dados extraídos no banco de dados."""
     try:
@@ -191,7 +227,7 @@ def save_to_database(data):
         if existing_invoice:
             update_query = """
             UPDATE invoices
-            SET issue_date = %s, taxpayer_number = %s, account_number = %s, client = %s, address = %s, cvp = %s,
+            SET invoice_type = %s,issue_date = %s, taxpayer_number = %s, account_number = %s, client = %s, address = %s, cvp = %s,
                 invoice_period_month = %s, invoice_period_year = %s, total_amount = %s, amount_to_pay = %s,
                 sent_validar = %s, quitar = %s, pdffile = %s
             WHERE invoice_number = %s
@@ -199,6 +235,7 @@ def save_to_database(data):
             cursor.execute(
                 update_query,
                 (
+                    data["invoice_type"],
                     data["issue_date"],
                     data["taxpayer_number"],
                     data["account_number"],
@@ -217,12 +254,13 @@ def save_to_database(data):
             )
         else:
             insert_query = """
-            INSERT INTO invoices (invoice_number, issue_date, taxpayer_number, account_number, client, address, cvp, invoice_period_month, invoice_period_year, total_amount, amount_to_pay, sent_validar, quitar, pdffile)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO invoices (invoice_type, invoice_number, issue_date, taxpayer_number, account_number, client, address, cvp, invoice_period_month, invoice_period_year, total_amount, amount_to_pay, sent_validar, quitar, pdffile)
+            VALUES (%s,%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
             cursor.execute(
                 insert_query,
                 (
+                    data["invoice_type"],
                     data["invoice_number"],
                     data["issue_date"],
                     data["taxpayer_number"],
