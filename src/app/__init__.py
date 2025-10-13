@@ -3,7 +3,7 @@ from datetime import timedelta
 from flask import Flask
 from flask_mysqldb import MySQL
 from .config import Config, DevelopmentConfig, ProductionConfig
-from app.db import close_connection
+from app.extensions.csrf import csrf
 
 # Initialize extensions globally
 mysql = MySQL()
@@ -31,6 +31,7 @@ def create_app():
 
     # Initialize extensions
     mysql.init_app(app)
+    csrf.init_app(app)
 
     # Import and register blueprints
     from .routes.auth import auth_bp
@@ -43,8 +44,12 @@ def create_app():
     app.register_blueprint(users_bp)
     app.register_blueprint(units_bp)
 
+    # Lazy import 
+    from app.db import close_connection
+
     @app.teardown_appcontext
     def teardown_db(exception):
+        
         close_connection()
 
     return app
