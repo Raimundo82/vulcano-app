@@ -9,6 +9,7 @@ from flask import (
     send_from_directory,
     make_response,
     session,
+    current_app
 )
 from MySQLdb.cursors import DictCursor
 from datetime import datetime
