@@ -3,6 +3,7 @@ from datetime import timedelta
 from flask import Flask
 from flask_mysqldb import MySQL
 from flask_wtf.csrf import generate_csrf
+from flask_wtf.csrf import generate_csrf
 from .config import Config, DevelopmentConfig, ProductionConfig
 from app.extensions.csrf import csrf
 
@@ -35,6 +36,10 @@ def create_app():
     # Initialize extensions
     mysql.init_app(app)
     csrf.init_app(app)
+
+    @app.context_processor
+    def inject_csrf_token():
+        return {"csrf_token": lambda: generate_csrf()}
 
     @app.context_processor
     def inject_csrf_token():
