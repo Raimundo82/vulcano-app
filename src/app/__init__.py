@@ -2,6 +2,7 @@ import os
 from datetime import timedelta
 from flask import Flask
 from flask_mysqldb import MySQL
+from flask_wtf.csrf import generate_csrf
 from .config import Config, DevelopmentConfig, ProductionConfig
 from app.extensions.csrf import csrf
 
@@ -33,6 +34,10 @@ def create_app():
     mysql.init_app(app)
     csrf.init_app(app)
 
+    @app.context_processor
+    def inject_csrf_token():
+        return {"csrf_token": lambda: generate_csrf()}
+
     # Import and register blueprints
     from .routes.auth import auth_bp
     from .routes.invoices import invoices_bp
@@ -43,6 +48,8 @@ def create_app():
     app.register_blueprint(invoices_bp)
     app.register_blueprint(users_bp)
     app.register_blueprint(units_bp)
+
+ 
 
     # Lazy import 
     from app.db import close_connection
