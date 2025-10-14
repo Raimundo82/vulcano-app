@@ -14,6 +14,7 @@ from flask import (
 from ..utils.auth_decorators import login_required, admin_required
 from ..config import Config
 from ..db import get_connection
+from MySQLdb.cursors import DictCursor
 
 units_bp = Blueprint("units", __name__)
 
@@ -22,16 +23,16 @@ units_bp = Blueprint("units", __name__)
 @login_required
 def list_units():
     try:
-        with get_connection() as conn:
-            with conn.cursor(dictionary=True) as cursor:
-                cursor.execute(
+        conn = get_connection()
+        cursor = conn.cursor(DictCursor)
+        cursor.execute(
                     """
                     SELECT id, num_cliente, unidade, poc, email_poc
                     FROM unidades
                     ORDER BY num_cliente ASC, unidade ASC
                 """
-                )
-                units = cursor.fetchall()
+        )
+        units = cursor.fetchall()
 
         return render_template(
             "units.html",
@@ -62,16 +63,16 @@ def add_unit():
             flash("Número de cliente e unidade são obrigatórios", "warning")
             return redirect(url_for("units.list_units"))
 
-        with get_connection() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute(
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
                     """
                     INSERT INTO unidades (num_cliente, unidade, poc, email_poc)
                     VALUES (%s, %s, %s, %s)
                 """,
                     (num_cliente, unidade, poc, email_poc),
                 )
-                conn.commit()
+        conn.commit()
 
         flash("Unidade adicionada com sucesso!", "success")
         return redirect(url_for("units.list_units"))
@@ -99,9 +100,9 @@ def edit_unit(unit_id):
             flash("Número de cliente e unidade são obrigatórios", "warning")
             return redirect(url_for("units.list_units"))
 
-        with get_connection() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute(
+        conn = get_connection()
+        cursor = conn.cursor(DictCursor)
+        cursor.execute(
                     """
                     UPDATE unidades
                     SET num_cliente = %s, unidade = %s,
@@ -110,7 +111,7 @@ def edit_unit(unit_id):
                 """,
                     (num_cliente, unidade, poc, email_poc, unit_id),
                 )
-                conn.commit()
+        conn.commit()
 
         flash("Unidade atualizada com sucesso!", "success")
         return redirect(url_for("units.list_units"))
@@ -129,10 +130,10 @@ def edit_unit(unit_id):
 def delete_unit(unit_id):
     """Delete unit (admin only)"""
     try:
-        with get_connection() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute("DELETE FROM unidades WHERE id = %s", (unit_id,))
-                conn.commit()
+        conn = get_connection()
+        cursor = conn.cursor(DictCursor)
+        cursor.execute("DELETE FROM unidades WHERE id = %s", (unit_id,))
+        conn.commit()
 
         flash("Unidade apagada com sucesso!", "success")
     except mysql.connector.Error as err:

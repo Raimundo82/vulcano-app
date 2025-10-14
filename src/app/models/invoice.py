@@ -280,7 +280,7 @@ def save_to_database(data):
 
         conn.commit()
         cursor.close()
-        conn.close()
+        # conn.close()
         print(f"Dados salvos no banco de dados: {data}")
     except mysql.connector.Error as err:
         print(f"Erro ao salvar no banco de dados: {err}")

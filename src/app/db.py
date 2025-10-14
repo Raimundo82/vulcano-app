@@ -1,19 +1,11 @@
-from flask import current_app, g
 from app import mysql
+from MySQLdb.cursors import DictCursor
 
 def get_connection():
-    """
-    Returns connection from the Flask-MySQLdb extension
-    This connection is tied to the Flask app context.
-    """
-    if "db_conn" not in g:
-        g.db_conn = mysql.connection
-    return g.db_conn
+    """Return the Flask-MySQLdb connection (context managed automatically)."""
+    return mysql.connection
 
-def close_connection():
-    """
-    Closes the database connection at the end of the request.
-    """
-    db_conn = g.pop("db_conn", None)
-    if db_conn is not None:
-        db_conn.close()
+def get_dict_cursor():
+    """Convenience helper that returns a dictionary-style cursor."""
+    conn = get_connection()
+    return conn.cursor(DictCursor)

@@ -30,6 +30,8 @@ def create_app():
         PERMANENT_SESSION_LIFETIME=timedelta(hours=8),
     )
 
+    app.config["MYSQL_AUTOCOMMIT"] = True
+
     # Initialize extensions
     mysql.init_app(app)
     csrf.init_app(app)
@@ -48,16 +50,6 @@ def create_app():
     app.register_blueprint(invoices_bp)
     app.register_blueprint(users_bp)
     app.register_blueprint(units_bp)
-
- 
-
-    # Lazy import 
-    from app.db import close_connection
-
-    @app.teardown_appcontext
-    def teardown_db(exception):
-        
-        close_connection()
 
     return app
 
