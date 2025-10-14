@@ -2,6 +2,7 @@ from functools import wraps
 from flask import session, jsonify, redirect, url_for, flash, request, current_app
 from .ldap_auth import authenticate_user
 from ..db import get_connection
+from MySQLdb.cursors import DictCursor
 
 
 def login_required(f):
@@ -23,15 +24,15 @@ def admin_required(f):
             return redirect(url_for("auth.login"))  # Fixed endpoint
 
         try:
-            with get_connection() as conn:
-                with conn.cursor(dictionary=True) as cursor:
-                    cursor.execute(
+            conn = get_connection()
+            cursor = conn.cursor(DictCursor)
+            cursor.execute(
                         "SELECT is_admin FROM users WHERE username = %s",
                         (session["username"],),
-                    )
-                    user = cursor.fetchone()
+            )
+            user = cursor.fetchone()
 
-                    if not user or not user["is_admin"]:
+            if not user or not user["is_admin"]:
                         flash("Acesso restrito a administradores", "danger")
                         return redirect(url_for("invoices.index"))  # Fixed endpoint
 

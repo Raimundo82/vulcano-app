@@ -1,4 +1,5 @@
 from ldap3 import Server, Connection, ALL, Tls
+from MySQLdb.cursors import DictCursor
 import ssl
 from ..config import Config
 from app.db import get_connection
@@ -20,11 +21,11 @@ def authenticate_user(username, password):
 
         # Verifica se o usuário existe na tabela de usuários do banco de dados
         conn = get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(DictCursor)
         cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
         user = cursor.fetchone()
         cursor.close()
-        conn.close()
+       # conn.close()
 
         if not user:
             print(f"Usuário {username} não encontrado no banco de dados.")

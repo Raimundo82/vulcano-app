@@ -44,8 +44,8 @@ def login():
             finally:
                 if cursor:
                     cursor.close()
-                if conn:
-                    conn.close()
+                # if conn:
+                #     conn.close()
 
             # Set session variables
             session["username"] = user["username"]

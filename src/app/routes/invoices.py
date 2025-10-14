@@ -10,6 +10,7 @@ from flask import (
     make_response,
     session,
 )
+from MySQLdb.cursors import DictCursor
 from datetime import datetime
 import os
 import shutil
@@ -122,7 +123,7 @@ def process_invoices():
 def get_faturas():
     try:
         conn = get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(DictCursor)
         cursor.execute(
             """
             SELECT
@@ -160,9 +161,9 @@ def get_faturas():
             fatura["media"] = resultado["media"] if resultado["media"] else 0.0
 
         cursor.close()
-        conn.close()
+        # conn.close()
         return jsonify(faturas)
-    except mysql.connector.Error as err:
+    except Exception as err:
         return jsonify({"error": str(err)}), 500
 
 
@@ -186,9 +187,9 @@ def update_quitar(invoice_number):
         )
         conn.commit()
         cursor.close()
-        conn.close()
+        #conn.close()
         return jsonify({"success": True})
-    except mysql.connector.Error as err:
+    except Exception as err:
         return jsonify({"error": str(err)}), 500
 
 
@@ -229,7 +230,7 @@ def eliminar_faturas():
                 os.remove(pdf_path)
 
         cursor.close()
-        conn.close()
+        # conn.close()
         return jsonify({"success": True, "message": "Faturas eliminadas com sucesso."})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -240,7 +241,7 @@ def eliminar_faturas():
 def get_quitadas():
     try:
         conn = get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(DictCursor)
         cursor.execute(
             """
             SELECT
@@ -279,9 +280,9 @@ def get_quitadas():
             fatura["media"] = resultado["media"] if resultado["media"] else 0.0
 
         cursor.close()
-        conn.close()
+        # conn.close()
         return jsonify(faturas)
-    except mysql.connector.Error as err:
+    except Exception as err:
         return jsonify({"error": str(err)}), 500
 
 
@@ -305,18 +306,18 @@ def quitar_faturas():
                 return jsonify({"error": "Nenhuma fatura marcada."}), 400
 
             # Use context manager for database connection
-            with get_connection() as conn:
-                with conn.cursor(dictionary=True) as cursor:
-                    placeholders = ",".join(["%s"] * len(faturas_marcadas))
-                    query = f"""
+            conn = get_connection()
+            cursor = conn.cursor(DictCursor)
+            placeholders = ",".join(["%s"] * len(faturas_marcadas))
+            query = f"""
                         SELECT account_number, invoice_number,
                                invoice_period_month, invoice_period_year,
                                total_amount
                         FROM invoices
                         WHERE invoice_number IN ({placeholders})
                     """
-                    cursor.execute(query, faturas_marcadas)
-                    faturas = cursor.fetchall()
+            cursor.execute(query, faturas_marcadas)
+            faturas = cursor.fetchall()
 
             # Generate PDF only if we got results
             if not faturas:
@@ -363,14 +364,14 @@ def quitar_faturas_marcadas():
 
         conn.commit()
         cursor.close()
-        conn.close()
+        # conn.close()
         return jsonify(
             {
                 "success": True,
                 "message": f"{len(faturas_marcadas)} faturas quitadas com sucesso.",
             }
         )
-    except mysql.connector.Error as err:
+    except Exception as err:
         return jsonify({"error": str(err)}), 500
 
 
@@ -380,7 +381,7 @@ def account_details(account_number):
     try:
         # Use your existing get_connection() function or direct mysql.connection
         conn = get_connection()  # Or: conn = mysql.connection
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(DictCursor)
 
         # Get client name and most recent invoice
         cursor.execute(
@@ -432,7 +433,7 @@ def account_details(account_number):
         )
 
         cursor.close()
-        conn.close()
+        # conn.close()
 
         # Prepare chart data (reversed for chronological order)
         invoices.reverse()
