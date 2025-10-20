@@ -42,8 +42,7 @@ jobs:
           DB_PASS: ""
           DB_HOST: ""
           DB_NAME: ":memory:" 
-          SQLALCHEMY_DATABASE_URI: 
-            sqlite:///:memory
+          SQLALCHEMY_DATABASE_URI: "sqlite:///:memory:"
         run: |
           poetry run pytest --maxfail=1 --disable-warnings -q --cov=src --cov-report=xml
 
