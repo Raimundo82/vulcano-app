@@ -30,20 +30,10 @@ def create_app():
         PERMANENT_SESSION_LIFETIME=timedelta(hours=8),
     )
 
-       # --- Database configuration ---
-    if os.getenv("CI") or os.getenv("FLASK_ENV") == "testing":
-        # 🧪 CI/CD or test mode → use SQLite in-memory
-        app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
-        print("⚙️ Running in CI/testing mode → using SQLite in-memory DB")
-    else:
-        # 🗄️ Normal mode → use MySQL
-        db_user = os.getenv("DB_USER", "vulcano")
-        db_pass = os.getenv("DB_PASS", "vulcano")
-        db_host = os.getenv("DB_HOST", "db")
-        db_name = os.getenv("DB_NAME", "vulcano")
-        app.config["SQLALCHEMY_DATABASE_URI"] = (
-            f"mysql+pymysql://{db_user}:{db_pass}@{db_host}/{db_name}"
-    )
+    db_user = os.getenv("DB_USER", "vulcano")
+    db_pass = os.getenv("DB_PASS", "vulcano")
+    db_host = os.getenv("DB_HOST", "db")
+    db_name = os.getenv("DB_NAME", "vulcano")
     
     app.config["SQLALCHEMY_DATABASE_URI"] = (
         f"mysql+pymysql://{db_user}:{db_pass}@{db_host}/{db_name}"
@@ -76,5 +66,4 @@ def create_app():
     app.register_blueprint(units_bp)
 
     return app
-
 
