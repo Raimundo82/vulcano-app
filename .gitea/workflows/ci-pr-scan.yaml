@@ -36,6 +36,8 @@ jobs:
           poetry install --no-root
 
       - name: Run tests with coverage
+        env:
+          FLASK_ENV: testing
         run: |
           poetry run pytest --maxfail=1 --disable-warnings -q --cov=src --cov-report=xml
 
