@@ -37,7 +37,12 @@ jobs:
 
       - name: Run tests with coverage
         env:
-          FLASK_ENV: development
+          FLASK_ENV: testing
+          DB_USER: ""
+          DB_PASS: ""
+          DB_HOST: ""
+          DB_NAME: ":memory:" 
+          SQLALCHEMY_DATABASE_URI: "sqlite:///:memory:"
         run: |
           poetry run pytest --maxfail=1 --disable-warnings -q --cov=src --cov-report=xml
 
