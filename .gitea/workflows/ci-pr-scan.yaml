@@ -21,6 +21,31 @@ jobs:
           ssh-key: ${{ secrets.SSH_KEY }}
           ssh-known-hosts: ${{ vars.SSH_KNOWN_HOSTS }}
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+        
+      - name: Install Poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+
+      - name: Install dependencies
+        run: |
+          poetry install --no-root
+
+      - name: Run tests with coverage
+        env:
+          FLASK_ENV: testing
+          DB_USER: ""
+          DB_PASS: ""
+          DB_HOST: ""
+          DB_NAME: ":memory:" 
+          SQLALCHEMY_DATABASE_URI: "sqlite:///:memory:"
+        run: |
+          poetry run pytest --maxfail=1 --disable-warnings -q --cov=src --cov-report=xml
+
       - name: SonarQube Scan
         uses: sonarsource/sonarqube-scan-action@v6.0.0
         env:
