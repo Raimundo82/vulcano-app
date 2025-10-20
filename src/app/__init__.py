@@ -34,10 +34,15 @@ def create_app():
     db_pass = os.getenv("DB_PASS", "vulcano")
     db_host = os.getenv("DB_HOST", "db")
     db_name = os.getenv("DB_NAME", "vulcano")
+
+    external_uri = os.getenv("SQLALCHEMY_DATABASE_URI")
+    if external_uri:
+        app.config["SQLALCHEMY_DATABASE_URI"] = external_uri
+    else:
+        app.config["SQLALCHEMY_DATABASE_URI"] = (
+            f"mysql+pymysql://{db_user}:{db_pass}@{db_host}/{db_name}"
+        )
     
-    app.config["SQLALCHEMY_DATABASE_URI"] = (
-        f"mysql+pymysql://{db_user}:{db_pass}@{db_host}/{db_name}"
-    )
 
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
