@@ -21,7 +21,7 @@ DROP TABLE IF EXISTS invoices;
 /*!40101 SET NAMES utf8mb4 */
 ;
 --
--- Banco de dados: `vulcano_db`
+-- base de dados: `vulcano_db`
 --
 
 -- --------------------------------------------------------

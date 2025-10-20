@@ -1,13 +1,13 @@
 import os
 from datetime import timedelta
 from flask import Flask
-from flask_mysqldb import MySQL
 from flask_wtf.csrf import generate_csrf
+from app.extensions.db import db, migrate
 from .config import Config, DevelopmentConfig, ProductionConfig
 from app.extensions.csrf import csrf
-
-# Initialize extensions globally
-mysql = MySQL()
+from app.models.user import User
+from app.models.unit import Unit
+from app.models.invoice import Invoice
 
 def create_app():
     """Application factory for Flask app."""
@@ -30,10 +30,20 @@ def create_app():
         PERMANENT_SESSION_LIFETIME=timedelta(hours=8),
     )
 
-    app.config["MYSQL_AUTOCOMMIT"] = True
+    db_user = os.getenv("DB_USER", "vulcano")
+    db_pass = os.getenv("DB_PASS", "vulcano")
+    db_host = os.getenv("DB_HOST", "db")
+    db_name = os.getenv("DB_NAME", "vulcano")
+    
+    app.config["SQLALCHEMY_DATABASE_URI"] = (
+        f"mysql+pymysql://{db_user}:{db_pass}@{db_host}/{db_name}"
+    )
+
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     # Initialize extensions
-    mysql.init_app(app)
+    db.init_app(app)
+    migrate.init_app(app, db)
     csrf.init_app(app)
 
     @app.context_processor
