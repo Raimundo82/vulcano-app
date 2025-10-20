@@ -37,7 +37,7 @@ jobs:
 
       - name: Run tests with coverage
         env:
-          FLASK_ENV: testing
+          FLASK_ENV: development
         run: |
           poetry run pytest --maxfail=1 --disable-warnings -q --cov=src --cov-report=xml
 
