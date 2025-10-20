@@ -1,4 +1,4 @@
-import mysql.connector
+# src/app/routes/units.py
 from flask import (
     Blueprint,
     render_template,
@@ -11,133 +11,56 @@ from flask import (
     abort,
     current_app,
 )
-from MySQLdb.cursors import DictCursor
+# import mysql.connector
+# from MySQLdb.cursors import DictCursor
 from ..utils.auth_decorators import login_required, admin_required
 from ..config import Config
-from ..db import get_connection
+# from ..db_legacy import get_connection  # ❌ disabled for migration
 
 units_bp = Blueprint("units", __name__)
+
+# 🧩 Note:
+# All DB logic temporarily disabled to allow Alembic to import models.
+# After migration succeeds, we’ll replace with SQLAlchemy ORM calls.
 
 
 @units_bp.route("/units")
 @login_required
 def list_units():
-    try:
-        conn = get_connection()
-        cursor = conn.cursor(DictCursor)
-        cursor.execute(
-                    """
-                    SELECT id, num_cliente, unidade, poc, email_poc
-                    FROM unidades
-                    ORDER BY num_cliente ASC, unidade ASC
-                """
-        )
-        units = cursor.fetchall()
+    # Placeholder version for migration
+    dummy_units = [
+        {"id": 1, "num_cliente": "123", "unidade": "Base Naval", "poc": "João", "email_poc": "joao@example.com"},
+        {"id": 2, "num_cliente": "456", "unidade": "Centro Técnico", "poc": "Maria", "email_poc": "maria@example.com"},
+    ]
 
-        return render_template(
-            "units.html",
-            units=units,
-            username=session.get("username"),
-            display_name=session.get("display_name"),
-            is_admin=session.get("is_admin", False),
-        )
-
-    except Exception as e:
-        current_app.logger.error(f"Units list error: {str(e)}")
-        flash("Erro ao carregar lista de unidades", "danger")
-        return redirect(url_for("invoices.index"))
+    return render_template(
+        "units.html",
+        units=dummy_units,
+        username=session.get("username"),
+        display_name=session.get("display_name"),
+        is_admin=session.get("is_admin", False),
+    )
 
 
 @units_bp.route("/units/add", methods=["POST"])
 @admin_required
 def add_unit():
-    """Add new unit (admin only)"""
-    try:
-        num_cliente = request.form.get("num_cliente", "").strip()
-        unidade = request.form.get("unidade", "").strip()
-        poc = request.form.get("poc", "").strip()
-        email_poc = request.form.get("email_poc", "").strip().lower()
-
-        # Basic validation
-        if not all([num_cliente, unidade]):
-            flash("Número de cliente e unidade são obrigatórios", "warning")
-            return redirect(url_for("units.list_units"))
-
-        conn = get_connection()
-        cursor = conn.cursor(DictCursor)
-        cursor.execute(
-                    """
-                    INSERT INTO unidades (num_cliente, unidade, poc, email_poc)
-                    VALUES (%s, %s, %s, %s)
-                """,
-                    (num_cliente, unidade, poc, email_poc),
-        )
-        conn.commit()
-
-        flash("Unidade adicionada com sucesso!", "success")
-        return redirect(url_for("units.list_units"))
-
-    except mysql.connector.IntegrityError:
-        flash("Unidade já existe para este cliente", "danger")
-    except mysql.connector.Error as err:
-        current_app.logger.error(f"Database error in add_unit: {err}")
-        flash("Erro ao adicionar unidade", "danger")
-
+    """Temporarily disabled DB logic (migration phase)"""
+    flash("Unidade adicionada (modo simulado).", "success")
     return redirect(url_for("units.list_units"))
 
 
 @units_bp.route("/units/edit/<int:unit_id>", methods=["POST"])
 @admin_required
 def edit_unit(unit_id):
-    """Edit existing unit (admin only)"""
-    try:
-        num_cliente = request.form.get("num_cliente", "").strip()
-        unidade = request.form.get("unidade", "").strip()
-        poc = request.form.get("poc", "").strip()
-        email_poc = request.form.get("email_poc", "").strip().lower()
-
-        if not all([num_cliente, unidade]):
-            flash("Número de cliente e unidade são obrigatórios", "warning")
-            return redirect(url_for("units.list_units"))
-
-        conn = get_connection()
-        cursor = conn.cursor(DictCursor)
-        cursor.execute(
-                    """
-                    UPDATE unidades
-                    SET num_cliente = %s, unidade = %s,
-                        poc = %s, email_poc = %s
-                    WHERE id = %s
-                """,
-                    (num_cliente, unidade, poc, email_poc, unit_id),
-                )
-        conn.commit()
-
-        flash("Unidade atualizada com sucesso!", "success")
-        return redirect(url_for("units.list_units"))
-
-    except mysql.connector.IntegrityError:
-        flash("Unidade já existe para este cliente", "danger")
-    except mysql.connector.Error as err:
-        current_app.logger.error(f"Database error in edit_unit: {err}")
-        flash("Erro ao atualizar unidade", "danger")
-
+    """Temporarily disabled DB logic (migration phase)"""
+    flash(f"Unidade {unit_id} atualizada (modo simulado).", "success")
     return redirect(url_for("units.list_units"))
 
 
 @units_bp.route("/units/delete/<int:unit_id>", methods=["POST"])
 @admin_required
 def delete_unit(unit_id):
-    """Delete unit (admin only)"""
-    try:
-        conn = get_connection()
-        cursor = conn.cursor(DictCursor)
-        cursor.execute("DELETE FROM unidades WHERE id = %s", (unit_id,))
-        conn.commit()
-
-        flash("Unidade apagada com sucesso!", "success")
-    except mysql.connector.Error as err:
-        current_app.logger.error(f"Database error in delete_unit: {err}")
-        flash("Erro ao apagar unidade", "danger")
-
+    """Temporarily disabled DB logic (migration phase)"""
+    flash(f"Unidade {unit_id} apagada (modo simulado).", "success")
     return redirect(url_for("units.list_units"))
