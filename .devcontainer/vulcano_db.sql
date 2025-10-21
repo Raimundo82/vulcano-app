@@ -21,7 +21,7 @@ DROP TABLE IF EXISTS invoices;
 /*!40101 SET NAMES utf8mb4 */
 ;
 --
--- Banco de dados: `vulcano_db`
+-- base de dados: `vulcano_db`
 --
 
 -- --------------------------------------------------------
@@ -10855,6 +10855,14 @@ VALUES (
         'pinto.alves@marinha.pt',
         0,
         '2025-07-09 14:29:01'
+    ),
+    (
+        87,
+        'm9104124',
+        '2TEN ST-EINF Pinheiro Domingues',
+        'pinheiro.domingues@marinha.pt',
+        1,
+        '2025-09-16 14:57:35'
     );
 --
 -- Índices para tabelas despejadas

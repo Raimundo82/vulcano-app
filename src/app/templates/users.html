@@ -123,6 +123,7 @@
                                             Editar
                                         </button>
                                         <form action="{{ url_for('users.delete_user', user_id=user.id) }}" method="POST" style="display:inline;">
+                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                             <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Tem certeza que deseja apagar este utilizador?')">Apagar</button>
                                         </form>
                                     </td>
@@ -150,6 +151,8 @@
                 </div>
                 <div class="modal-body">
                     <form action="{{ url_for('users.add_user') }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
                         <div class="mb-3">
                             <label for="username" class="form-label">Username</label>
                             <input type="text" class="form-control" id="username" name="username" required>
@@ -184,6 +187,7 @@
                     </div>
                     <div class="modal-body">
                         <form action="{{ url_for('users.edit_user', user_id=user.id) }}" method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <div class="mb-3">
                                 <label for="username" class="form-label">Username</label>
                                 <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required>
@@ -200,7 +204,7 @@
                                 <input type="checkbox" class="form-check-input" id="is_admin" name="is_admin" {% if user.is_admin %}checked{% endif %}>
                                 <label class="form-check-label" for="is_admin">Administrador</label>
                             </div>
-                            <button type="submit" class="btn btn-primary">Salvar</button>
+                            <button type="submit" class="btn btn-primary">guardar</button>
                         </form>
                     </div>
                 </div>
