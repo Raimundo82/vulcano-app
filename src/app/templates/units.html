@@ -118,6 +118,7 @@
                                             Editar
                                         </button>
                                         <form action="{{ url_for('units.delete_unit', unit_id=unit.id) }}" method="POST" style="display:inline;">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                             <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Tem certeza que deseja apagar esta unidade?')">Apagar</button>
                                         </form>
                                     </td>
@@ -147,6 +148,7 @@
                 </div>
                 <div class="modal-body">
                     <form action="{{ url_for('units.add_unit') }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="mb-3">
                             <label for="num_cliente" class="form-label">Número de Cliente</label>
                             <input type="text" class="form-control" id="num_cliente" name="num_cliente" required>
@@ -183,6 +185,7 @@
                     </div>
                     <div class="modal-body">
                         <form action="{{ url_for('units.edit_unit', unit_id=unit.id) }}" method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <div class="mb-3">
                                 <label for="num_cliente" class="form-label">Número de Cliente</label>
                                 <input type="text" class="form-control" id="num_cliente" name="num_cliente" value="{{ unit.num_cliente }}" required>
@@ -199,7 +202,7 @@
                                 <label for="email_poc" class="form-label">Email POC</label>
                                 <input type="email" class="form-control" id="email_poc" name="email_poc" value="{{ unit.email_poc }}">
                             </div>
-                            <button type="submit" class="btn btn-primary">Salvar</button>
+                            <button type="submit" class="btn btn-primary">guardar</button>
                         </form>
                     </div>
                 </div>
