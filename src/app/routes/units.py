@@ -11,13 +11,13 @@ from flask import (
     abort,
     current_app,
 )
-# import mysql.connector
-# from MySQLdb.cursors import DictCursor
+
 from ..utils.auth_decorators import login_required, admin_required
 from ..config import Config
-# from ..db_legacy import get_connection  # ❌ disabled for migration
 
 units_bp = Blueprint("units", __name__)
+
+UNITS_INDEX_LIST = "units.list_units"
 
 # 🧩 Note:
 # All DB logic temporarily disabled to allow Alembic to import models.
@@ -47,7 +47,7 @@ def list_units():
 def add_unit():
     """Temporarily disabled DB logic (migration phase)"""
     flash("Unidade adicionada (modo simulado).", "success")
-    return redirect(url_for("units.list_units"))
+    return redirect(url_for(UNITS_INDEX_LIST))
 
 
 @units_bp.route("/units/edit/<int:unit_id>", methods=["POST"])
@@ -55,7 +55,7 @@ def add_unit():
 def edit_unit(unit_id):
     """Temporarily disabled DB logic (migration phase)"""
     flash(f"Unidade {unit_id} atualizada (modo simulado).", "success")
-    return redirect(url_for("units.list_units"))
+    return redirect(url_for(UNITS_INDEX_LIST))
 
 
 @units_bp.route("/units/delete/<int:unit_id>", methods=["POST"])
@@ -63,4 +63,4 @@ def edit_unit(unit_id):
 def delete_unit(unit_id):
     """Temporarily disabled DB logic (migration phase)"""
     flash(f"Unidade {unit_id} apagada (modo simulado).", "success")
-    return redirect(url_for("units.list_units"))
+    return redirect(url_for(UNITS_INDEX_LIST))

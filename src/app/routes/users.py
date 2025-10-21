@@ -11,12 +11,13 @@ from flask import (
     abort,
     current_app,
 )
-# from MySQLdb.cursors import DictCursor
+
 from ..utils.auth_decorators import login_required, admin_required
 from ..config import Config
-# from ..db_legacy import get_connection  # ❌ Disabled during SQLAlchemy migration
 
 users_bp = Blueprint("users", __name__)
+
+USERS_INDEX_LIST = "users.list_users"
 
 # 🧩 Migration phase: all DB calls disabled so Alembic can import models
 # After migration succeeds, these routes will be refactored to ORM-based versions.
@@ -45,7 +46,7 @@ def list_users():
 def add_user():
     """Temporarily disabled DB logic"""
     flash("Utilizador adicionado (modo simulado).", "success")
-    return redirect(url_for("users.list_users"))
+    return redirect(url_for(USERS_INDEX_LIST))
 
 
 @users_bp.route("/users/edit/<int:user_id>", methods=["POST"])
@@ -53,7 +54,7 @@ def add_user():
 def edit_user(user_id):
     """Temporarily disabled DB logic"""
     flash(f"Utilizador {user_id} atualizado (modo simulado).", "success")
-    return redirect(url_for("users.list_users"))
+    return redirect(url_for(USERS_INDEX_LIST))
 
 
 @users_bp.route("/users/delete/<int:user_id>", methods=["POST"])
@@ -64,4 +65,4 @@ def delete_user(user_id):
         flash("Não pode apagar a sua própria conta (modo simulado).", "warning")
     else:
         flash(f"Utilizador {user_id} apagado (modo simulado).", "success")
-    return redirect(url_for("users.list_users"))
+    return redirect(url_for(USERS_INDEX_LIST))

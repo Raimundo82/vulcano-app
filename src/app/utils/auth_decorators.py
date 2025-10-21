@@ -1,8 +1,6 @@
 # src/app/utils/auth_decorators.py
 from functools import wraps
 from flask import session, redirect, url_for, flash, current_app
-# from ..db_legacy import get_connection  # ❌ Disabled for migration
-# from MySQLdb.cursors import DictCursor
 from .ldap_auth import authenticate_user
 
 
@@ -27,7 +25,7 @@ def admin_required(f):
             return redirect(url_for("auth.login"))
 
         # ⚠️ Temporary placeholder logic
-        username = session.get("username")
+        # username = session.get("username")
         is_admin = session.get("is_admin", True)  # assume admin during migration
 
         if not is_admin:
