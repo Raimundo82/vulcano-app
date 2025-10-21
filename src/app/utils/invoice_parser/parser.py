@@ -26,34 +26,45 @@ def detect_invoice_type(pdf_path: str) -> str:
     return "None"
 
 
+_MONTHS_PT = (
+    r"(?:Janeiro|Fevereiro|Mar[cç]o|Abril|Maio|Junho|Julho|Agosto|"
+    r"Setembro|Outubro|Novembro|Dezembro)"
+)
+INVOICE_PERIOD_RE = re.compile(
+    rf"Fatura de:\s*(?:\n\s*)?({_MONTHS_PT})\s+(\d{{4}})",
+    flags=re.IGNORECASE,
+)
+
+
 def extract_basic_fields(pdf_path: str, text: str) -> dict:
-    """Extrai campos básicos da fatura a partir do texto e coordenadas."""
+    """Extrai campos básicos da fatura a partir do texto e coordenadas (versão segura)."""
     invoice_number = re.search(r"FT MV/(\d+)", text)
-    reference_number = re.search(r"Nº de Referência :\s*(\d+)", text)
+    reference_number = re.search(r"Nº de Referência\s*:\s*(\d+)", text)
     issue_date = extrair_data_emissao(pdf_path)
     taxpayer_number = extrair_contribuinte(pdf_path)
     account_number = extract_account(text)
     client = extract_client_by_coordinates(pdf_path, fitz.Rect(310, 160, 550, 165))
     address = extract_address_by_coordinates(pdf_path, fitz.Rect(310, 170, 550, 230))
     cvp = re.search(r"CVP:\s*(\d{12})", text)
-    invoice_period = re.search(
-        r"Fatura de:\s*([a-zç]+ \d{4})|Fatura de:\s*\n\s*([a-zç]+ \d{4})",
-        text,
-        re.IGNORECASE,
-    )
+
+    # ✅ Substitui o regex vulnerável por uma versão segura e eficiente
+    match = INVOICE_PERIOD_RE.search(text)
+    if match:
+        invoice_period = f"{match.group(1)} {match.group(2)}"
+    else:
+        invoice_period = None
 
     return {
         "invoice_number": invoice_number.group(1) if invoice_number else None,
         "reference_number": reference_number.group(1) if reference_number else None,
         "issue_date": issue_date,
         "taxpayer_number": taxpayer_number,
-        "account_number": account_number.group(1) if account_number else None,
+        "account_number": account_number.group(1) if hasattr(account_number, "group") else account_number,
         "client": client.replace("\n", "") if client else None,
         "address": address.replace("\n", "") if address else None,
         "cvp": cvp.group(1) if cvp else None,
-        "invoice_period": invoice_period.group(1) if invoice_period and invoice_period.group(1) else None,
+        "invoice_period": invoice_period,
     }
-
 
 def extract_amount_fields(pdf_path: str) -> tuple[float | None, float | None]:
     """Extrai os valores monetários da fatura."""

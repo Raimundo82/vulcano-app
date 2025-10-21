@@ -1,4 +1,3 @@
-# src/app/routes/invoices.py
 from flask import (
     Blueprint,
     render_template,
@@ -16,19 +15,15 @@ from datetime import datetime
 import os
 import shutil
 import tempfile
-# from ..models.invoice import (
-#     extract_invoice_data,
-#     save_to_database,
-#     verificar_tarifario,
-#     verificar_conta,
-#     extract_account,
-# )
 from ..utils.pdf_utils import generate_pdf_with_table
 from ..config import Config
-# from src.app.db_legacy import get_connection  # ❌ Disabled during SQLAlchemy migration
 from ..utils.auth_decorators import login_required
+from ..utils.invoice_parser import verificar_conta
+from typing import cast, Dict, Any
 
 invoices_bp = Blueprint("invoices", __name__)
+
+INDEX_ROUTE = "invoices.index"
 
 # 🧠 Reminder: All DB logic below will be refactored to ORM later
 # For now, we neutralize legacy DB connections so the app can import.
@@ -45,7 +40,7 @@ def upload_faturas():
     # This function only handles files, safe to keep active.
     if "faturas" not in request.files:
         flash("Nenhum arquivo selecionado", "error")
-        return redirect(url_for("invoices.index"))
+        return redirect(url_for(INDEX_ROUTE))
 
     files = request.files.getlist("faturas")
     uploaded_count = 0
@@ -72,7 +67,7 @@ def upload_faturas():
     if uploaded_count > 0:
         flash(f"{uploaded_count} faturas carregadas com sucesso!", "success")
 
-    return redirect(url_for("invoices.index", uploaded=uploaded_count))
+    return redirect(url_for(INDEX_ROUTE, uploaded=uploaded_count))
 
 
 @invoices_bp.route("/process", methods=["GET"])
@@ -93,9 +88,18 @@ def process_invoices():
                 destination_folder = os.path.join(processed_folder, year, month)
                 os.makedirs(destination_folder, exist_ok=True)
 
-                new_filename = f"{data['invoice_type']}_{data['issue_date']}_FT_{data['invoice_number']}_{data['client']}.pdf"
+                # ✅ Extrair e normalizar todos os campos antes do uso
+                invoice_type = str(data.get("invoice_type", "unknown"))
+                issue_date = str(data.get("issue_date", "unknown"))
+                invoice_number = str(data.get("invoice_number", "unknown"))
+                client = str(data.get("client", "unknown"))
+
+                # ✅ Agora o Sonar reconhece que tudo é string
+                new_filename = f"{invoice_type}_{issue_date}_FT_{invoice_number}_{client}.pdf"
+
                 destination_path = os.path.join(destination_folder, new_filename)
-                data["pdffile"] = new_filename
+                data = cast(Dict[str, Any], data)
+                data["pdffile"] = str(new_filename)
                 if os.path.exists(destination_path):
                     os.remove(destination_path)
 
@@ -114,26 +118,31 @@ def process_invoices():
 # def get_faturas():
 #     return jsonify([])
 
+# ❌ TEMPORARILY DISABLE ALL ROUTES THAT USE get_connection()
 # @invoices_bp.route("/api/faturas/<invoice_number>/quitar", methods=["PUT"])
 # @login_required
 # def update_quitar(invoice_number):
 #     return jsonify({"success": True})
 
+# ❌ TEMPORARILY DISABLE ALL ROUTES THAT USE get_connection()
 # @invoices_bp.route("/api/faturas/eliminar", methods=["POST"])
 # @login_required
 # def eliminar_faturas():
 #     return jsonify({"success": True})
 
+# ❌ TEMPORARILY DISABLE ALL ROUTES THAT USE get_connection()
 # @invoices_bp.route("/api/quitadas", methods=["GET"])
 # @login_required
 # def get_quitadas():
 #     return jsonify([])
 
+# ❌ TEMPORARILY DISABLE ALL ROUTES THAT USE get_connection()
 # @invoices_bp.route("/api/faturas/quitar-marcadas", methods=["POST"])
 # @login_required
 # def quitar_faturas_marcadas():
 #     return jsonify({"success": True})
 
+# ❌ TEMPORARILY DISABLE ALL ROUTES THAT USE get_connection()
 # @invoices_bp.route("/account/<account_number>")
 # @login_required
 # def account_details(account_number):

@@ -10,7 +10,6 @@ from flask import (
     current_app,
 )
 from ..utils.ldap_auth import authenticate_user
-# from ..db_legacy import get_connection  # ❌ Legacy import (disabled — now using ORM soon)
 
 auth_bp = Blueprint("auth", __name__)
 
