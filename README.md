@@ -25,3 +25,8 @@ poetry install
 ```sh
 poetry run flask --app app.app run --debug
 ```
+
+### Execute tests
+```sh
+poetry run pytest --disable-warnings --maxfail=1 --cov=src --cov-report=term-missing --cov-report=xml:coverage.xml
+```
