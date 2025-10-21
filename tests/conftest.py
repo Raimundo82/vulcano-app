@@ -8,7 +8,8 @@ def app():
     app.config.update({
         "TESTING": True,
         "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",  # DB temporário
-        "WTF_CSRF_ENABLED": False
+        "WTF_CSRF_ENABLED": False,
+        "SECRET_KEY": "test_secret_key"
     })
     with app.app_context():
         db.create_all()
