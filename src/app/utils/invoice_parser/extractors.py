@@ -2,6 +2,8 @@ import fitz # PyMuPDF
 import re
 from typing import List, Optional, Tuple
 
+_ACCOUNT_RE = re.compile(r"N[ºo]?\s*Conta\s*:\s*(\d+)", flags=re.IGNORECASE)
+
 def extrair_data_emissao(pdf_path: str) -> str | None:
     """
     Extrai a data de emissão do PDF a partir da localização do texto "Data de emissão:".
@@ -199,22 +201,15 @@ def extract_address_by_coordinates(pdf_path: str, coordinates: fitz.Rect) -> str
         print(f"Erro ao extrair endereço do PDF '{pdf_path}': {e}")
         return None
     
+
 def extract_account(text: str) -> str | None:
     """
-    Extrai o número de conta a partir de um texto de fatura.
-
-    Esta função utiliza uma expressão regular para procurar o padrão:
-    "Nº Conta: <número>", devolvendo apenas o número encontrado.
-
-    Args:
-        text (str): Texto completo extraído do PDF.
-
-    Returns:
-        str | None: Número da conta encontrado, ou None se não existir.
+    Extrai o número de conta a partir do texto.
+    Aceita variantes como: 'Nº Conta: 123', 'Nº Conta : 123', 'No Conta: 123' etc.
     """
     try:
-        match = re.search(r"Nº\s*Conta:\s*(\d+)", text)
-        return match.group(1) if match else None
+        m = _ACCOUNT_RE.search(text)
+        return m.group(1) if m else None
     except Exception as e:
         print(f"Erro ao extrair número de conta: {e}")
         return None
