@@ -44,7 +44,9 @@ jobs:
           DB_NAME: ":memory:" 
           SQLALCHEMY_DATABASE_URI: "sqlite:///:memory:"
         run: |
-          poetry run pytest --maxfail=1 --disable-warnings -q --cov=src --cov-report=xml
+          poetry run pytest --maxfail=1 --disable-warnings \
+          --cov=src --cov-report=xml:coverage.xml \
+          --cov-report=term-missing --rootdir=.
 
       - name: SonarQube Scan
         uses: sonarsource/sonarqube-scan-action@v6.0.0
