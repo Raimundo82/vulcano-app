@@ -46,7 +46,8 @@ jobs:
         run: |
           poetry run pytest --maxfail=1 --disable-warnings \
           --cov=src --cov-report=xml:coverage.xml \
-          --cov-report=term-missing --rootdir=.
+          --cov-report=term-missing --rootdir=. 
+          sed -i 's|<source>/workspaces/vulcano-app/src|<source>src|' coverage.xml
 
       - name: SonarQube Scan
         uses: sonarsource/sonarqube-scan-action@v6.0.0
