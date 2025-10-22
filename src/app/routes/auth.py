@@ -14,42 +14,40 @@ from ..utils.ldap_auth import authenticate_user
 auth_bp = Blueprint("auth", __name__)
 
 
-@auth_bp.route("/login", methods=["GET", "POST"])
-def login():
+# 🔒 GET = apenas mostrar o formulário
+@auth_bp.route("/login", methods=["GET"], endpoint="login")
+def login_get():
     """
-    Temporary migration-safe version:
-    - Keeps LDAP authentication working.
-    - Disables MySQL calls (until we migrate to SQLAlchemy).
+    Renders the login form.
+    CSRF protection is automatically applied via Flask-WTF.
     """
-    if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
+    return render_template("login.html")
 
-        # Authenticate via LDAP (this still works fine)
-        user = authenticate_user(username, password)
 
-        if user:
-            # ✅ Temporarily skip DB updates for last_login
-            # conn = get_connection()
-            # cursor = conn.cursor()
-            # cursor.execute(
-            #     "UPDATE users SET last_login = NOW() WHERE username = %s",
-            #     (username,),
-            # )
-            # conn.commit()
+# 🔒 POST = processar autenticação
+@auth_bp.route("/login", methods=["POST"], endpoint="login_post")
+def login_post():
+    """
+    Processes login form submission.
+    CSRF protection is active by default (Flask-WTF).
+    """
+    username = request.form.get("username")
+    password = request.form.get("password")
 
-            current_app.logger.info(f"User {username} authenticated via LDAP")
+    # Autenticação via LDAP
+    user = authenticate_user(username, password)
 
-            # Set session variables
-            session["username"] = user["username"]
-            session["display_name"] = user["display_name"]
-            session["is_admin"] = user["is_admin"]
+    if user:
+        current_app.logger.info(f"User {username} authenticated via LDAP")
 
-            return redirect(url_for("invoices.index"))
+        # Guarda dados de sessão
+        session["username"] = user["username"]
+        session["display_name"] = user["display_name"]
+        session["is_admin"] = user["is_admin"]
 
-        else:
-            flash("Credenciais inválidas", "error")
+        return redirect(url_for("invoices.index"))
 
+    flash("Credenciais inválidas", "error")
     return render_template("login.html")
 
 
