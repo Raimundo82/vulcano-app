@@ -1,0 +1,1 @@
+setupAccessCheck("/users", "Erro ao carregar utilizadores");

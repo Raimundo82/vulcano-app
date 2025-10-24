@@ -1,0 +1,41 @@
+{% if session.get('is_admin') %}
+{% for unit in units %}
+<div class="modal fade" id="editUnitModal{{ unit.id }}" tabindex="-1" aria-labelledby="editUnitModalLabel{{ unit.id }}" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editUnitModalLabel{{ unit.id }}">Editar Unidade</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <form action="{{ url_for('units.edit_unit', unit_id=unit.id) }}" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <div class="mb-3">
+            <label for="num_cliente_{{ unit.id }}" class="form-label">Número de Cliente</label>
+            <input type="text" id="num_cliente_{{ unit.id }}" class="form-control" name="num_cliente" value="{{ unit.num_cliente }}" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="unidade_{{ unit.id }}" class="form-label">Unidade</label>
+            <input type="text" id="unidade_{{ unit.id }}" class="form-control" name="unidade" value="{{ unit.unidade }}" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="poc_{{ unit.id }}" class="form-label">POC</label>
+            <input type="text" id="poc_{{ unit.id }}" class="form-control" name="poc" value="{{ unit.poc }}">
+          </div>
+
+          <div class="mb-3">
+            <label for="email_poc_{{ unit.id }}" class="form-label">Email POC</label>
+            <input type="email" id="email_poc_{{ unit.id }}" class="form-control" name="email_poc" value="{{ unit.email_poc }}">
+          </div>
+
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endif %}
