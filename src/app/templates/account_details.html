@@ -75,12 +75,12 @@
     <!-- jQuery -->
     <script src="{{ url_for('static', filename='js/jquery-3.7.1.min.js') }}"></script>
     <!-- Bootstrap JS e dependências -->
-    <script src="{{ url_for('static', filename='js/pooper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
 
     <script>
         // Dados para o gráfico
-        const labels = {{ labels | tojson | safe }};
+        const invoiceLabels = {{ labels | tojson | safe }};
         const amounts = {{ amounts | tojson | safe }};
         const averageValue = {{ average_value | tojson | safe }};
 
@@ -89,7 +89,7 @@
         const invoiceChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: labels,
+                labels: invoiceLabels,
                 datasets: [{
                     label: 'Valor a Pagar (€)',
                     data: amounts,

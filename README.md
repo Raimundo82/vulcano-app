@@ -30,3 +30,17 @@ poetry run flask --app app.app run --debug
 ```sh
 poetry run pytest --disable-warnings --maxfail=1 --cov=src --cov-report=term-missing --cov-report=xml:coverage.xml
 ```
+
+### On Initiation
+
+*Run the first migration!*
+
+```bash 
+poetry run flask db migrate -m "Initial Migration"
+```
+
+*Upgrade DB*
+
+```bash
+poetry run flask db upgrade
+```
