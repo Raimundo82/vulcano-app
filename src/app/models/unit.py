@@ -1,7 +1,7 @@
 from app.extensions.db import db
 
 class Unit(db.Model):
-    __tablename__ = "unidades"
+    __tablename__ = "units"
     id = db.Column(db.Integer, primary_key=True)
     num_cliente = db.Column(db.String(50), nullable=False)
     unidade = db.Column(db.String(100), nullable=False)

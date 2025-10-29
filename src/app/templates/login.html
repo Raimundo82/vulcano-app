@@ -35,7 +35,7 @@
 <body>
     <div class="container">
         <h1 class="mb-4">Login</h1>
-        <form method="POST" action="/login">
+        <form method="POST" action="{{ url_for('auth.login') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="mb-3">
                 <label for="username" class="form-label">Utilizador:</label>
@@ -60,7 +60,7 @@
     </div>
 
     <!-- Bootstrap JS e dependências -->
-    <script src="{{ url_for('static', filename='js/pooper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
 </body>
 </html>

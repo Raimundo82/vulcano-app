@@ -1,79 +1,65 @@
 import pytest
+from flask import session
+from unittest.mock import patch
 
-# 🔒 Fixture global que bloqueia qualquer ligação real ao LDAP
-@pytest.fixture(autouse=True)
-def mock_ldap(monkeypatch):
-    """Bloqueia conexões reais a LDAP durante os testes."""
-    class DummyConnection:
-        def __init__(self, *_, **__):
-            self.entries = []
-        def bind(self): return False
-        def search(self, *_, **__): return None
-    class DummyServer:
-        def __init__(self, *_, **__):
-            # Intentionally empty: this dummy server exists only as a placeholder
-            # to prevent the tests from creating real network LDAP connections,
-            # so no initialization is required here.
-            pass
-
-    monkeypatch.setattr("app.utils.ldap_auth.Server", DummyServer)
-    monkeypatch.setattr("app.utils.ldap_auth.Connection", DummyConnection)
-    yield
-
-
-# 🧪 Testes de rotas de autenticação
 def test_login_get_renders_form(client):
     """Deve devolver o formulário de login (GET)."""
-    response = client.get("/login")
-    assert response.status_code in (200, 302)
-    assert b"login" in response.data.lower()
-
-
-def test_login_post_invalid_credentials(client, mocker):
-    """Se as credenciais forem inválidas, deve voltar ao login."""
-    mocker.patch("app.routes.auth.authenticate_user", return_value=None)
-
-    response = client.post("/login", data={"username": "john", "password": "bad"})
-    # Pode devolver 200 (recarrega formulário) ou 302 (redirect), ambas são válidas
-    assert response.status_code in (200, 302)
-    assert b"login" in response.data.lower() or "/login" in (response.location or "")
-
+    # A rota agora é /auth/login
+    response = client.get("/auth/login")
+    assert response.status_code == 200
+    assert b"username" in response.data  # Verifica se o formulário foi renderizado
 
 def test_login_post_valid_credentials(client, mocker):
-    """Deve redirecionar para /invoices se o login for bem-sucedido."""
-    mocker.patch(
-        "app.routes.auth.authenticate_user",
-        return_value={"username": "john", "display_name": "John", "is_admin": False},
-    )
+    """Deve redirecionar para a página inicial com credenciais válidas."""
+    # Mock da função authenticate_user para simular um login bem-sucedido.
+    # O patch é feito em 'app.routes.auth' porque é nesse módulo que a função é importada e usada.
+    mocker.patch('app.routes.auth.authenticate_user', return_value={
+        'username': 'testuser',
+        'display_name': 'Test User',
+        'is_admin': True  # Simula um admin para cobertura completa
+    })
 
-    response = client.post("/login", data={"username": "john", "password": "ok"})
-    assert response.status_code == 302
-    assert "/" in response.location
+    # A rota agora é /auth/login
+    response = client.post("/auth/login", data={
+        'username': 'testuser',
+        'password': 'password'
+    }, follow_redirects=True)
 
-
-def test_login_post_admin_user_redirects_properly(client, mocker):
-    """Deve redirecionar o admin após login bem-sucedido."""
-    mocker.patch(
-        "app.routes.auth.authenticate_user",
-        return_value={"username": "admin", "display_name": "Boss", "is_admin": True},
-    )
-
-    response = client.post("/login", data={"username": "admin", "password": "ok"})
-    assert response.status_code == 302
-    assert "/" in response.location
-
-
-def test_logout_clears_session(client):
-    """O logout deve limpar a sessão e redirecionar para o login."""
+    assert response.status_code == 200
+    # Após o login, a sessão deve conter o username.
     with client.session_transaction() as sess:
-        sess["username"] = "john"
-        sess["is_admin"] = False
+        assert sess.get("username") == "testuser"
+        assert sess.get("is_admin") is True
 
-    response = client.get("/logout")
+def test_login_post_invalid_credentials(client, mocker):
+    """Deve mostrar uma mensagem de erro com credenciais inválidas."""
+    # Mock da função authenticate_user para simular uma falha de login (retorna None).
+    mocker.patch('app.routes.auth.authenticate_user', return_value=None)
+
+    # A rota agora é /auth/login
+    response = client.post("/auth/login", data={
+        'username': 'testuser',
+        'password': 'wrongpassword'
+    })
+
+    assert response.status_code == 200  # A página de login é renderizada novamente
+    assert b"Credenciais inv\xc3\xa1lidas" in response.data  # "Credenciais inválidas"
+
+def test_logout_clears_session_and_redirects(client):
+    """Deve limpar a sessão e redirecionar para a página de login."""
+    # Primeiro, simula um login para criar a sessão
+    with client.session_transaction() as sess:
+        sess["username"] = "testuser"
+        sess["is_admin"] = True
+
+    # A rota agora é /auth/logout
+    response = client.get("/auth/logout")
+
+    # Verifica o redirecionamento
     assert response.status_code == 302
-    assert "/login" in response.location
+    assert "/auth/login" in response.location
 
-    # Confirma que a sessão foi limpa
+    # Verifica se a sessão foi limpa
     with client.session_transaction() as sess:
         assert "username" not in sess
         assert "is_admin" not in sess

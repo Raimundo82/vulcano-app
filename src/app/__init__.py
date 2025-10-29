@@ -9,6 +9,8 @@ from app.models.user import User
 from app.models.unit import Unit
 from app.models.invoice import Invoice
 
+
+
 def create_app():
     """Application factory for Flask app."""
     app = Flask(__name__)
@@ -65,10 +67,10 @@ def create_app():
     from .routes.users import users_bp
     from .routes.units import units_bp
 
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(invoices_bp)
-    app.register_blueprint(users_bp)
-    app.register_blueprint(units_bp)
+    app.register_blueprint(auth_bp, url_prefix="/auth")
+    app.register_blueprint(invoices_bp, url_prefix="/invoices")
+    app.register_blueprint(users_bp, url_prefix="/users")
+    app.register_blueprint(units_bp, url_prefix="/units")
 
     return app
 

@@ -18,15 +18,16 @@ import tempfile
 from ..utils.pdf_utils import generate_pdf_with_table
 from ..config import Config
 from ..utils.auth_decorators import login_required
-from ..utils.invoice_parser import verificar_conta
+from ..utils.invoice_parser import verificar_conta, extract_invoice_data
 from typing import cast, Dict, Any
+
+from app.models.invoice import Invoice
+
+from sqlalchemy.exc import SQLAlchemyError
 
 invoices_bp = Blueprint("invoices", __name__)
 
 INDEX_ROUTE = "invoices.index"
-
-# 🧠 Reminder: All DB logic below will be refactored to ORM later
-# For now, we neutralize legacy DB connections so the app can import.
 
 
 @invoices_bp.route("/")
@@ -54,7 +55,8 @@ def upload_faturas():
                 file_path = os.path.join("pdfs", file.filename)
                 shutil.copy(temp_path, file_path)
                 uploaded_count += 1
-                flash(f"Fatura {file.filename} carregada com sucesso!", "success")
+                flash(
+                    f"Fatura {file.filename} carregada com sucesso!", "success")
             else:
                 flash(
                     f"Fatura {file.filename} não carregada (conta {conta_inf[1]}).",
@@ -80,12 +82,13 @@ def process_invoices():
     for filename in os.listdir(pdf_folder):
         if filename.endswith(".pdf"):
             pdf_path = os.path.join(pdf_folder, filename)
-            data = [] # extract_invoice_data(pdf_path)
+            data = extract_invoice_data(pdf_path)
 
             if data:
                 year = data.get("invoice_period_year", "unknown")
                 month = data.get("invoice_period_month", "unknown")
-                destination_folder = os.path.join(processed_folder, year, month)
+                destination_folder = os.path.join(
+                    processed_folder, year, month)
                 os.makedirs(destination_folder, exist_ok=True)
 
                 # ✅ Extrair e normalizar todos os campos antes do uso
@@ -97,26 +100,54 @@ def process_invoices():
                 # ✅ Agora o Sonar reconhece que tudo é string
                 new_filename = f"{invoice_type}_{issue_date}_FT_{invoice_number}_{client}.pdf"
 
-                destination_path = os.path.join(destination_folder, new_filename)
+                destination_path = os.path.join(
+                    destination_folder, new_filename)
                 data = cast(Dict[str, Any], data)
                 data["pdffile"] = str(new_filename)
                 if os.path.exists(destination_path):
                     os.remove(destination_path)
 
                 shutil.move(pdf_path, destination_path)
-                
-                #save_to_database(data)  # still works since it's self-contained
+
+                # save_to_database(data)  # still works since it's self-contained
                 invoices_data.append(data)
 
-    flash(f"Processamento concluído. {len(invoices_data)} faturas processadas.")
+    flash(
+        f"Processamento concluído. {len(invoices_data)} faturas processadas.")
     return render_template("processar.html", invoices=invoices_data)
 
 
-# ❌ TEMPORARILY DISABLE ALL ROUTES THAT USE get_connection()
-# @invoices_bp.route("/api/faturas", methods=["GET"])
-# @login_required
-# def get_faturas():
-#     return jsonify([])
+@invoices_bp.route("/api/faturas", methods=["GET"])
+@login_required
+def get_faturas():
+    """Retorna todas as faturas por quitar."""
+    try:
+        invoices = Invoice.query.filter_by(quitar=False).all()
+        result = [
+            {
+                "id": inv.id,
+                "invoice_type": inv.invoice_type,
+                "invoice_number": inv.invoice_number,
+                "issue_date": inv.issue_date,
+                "taxpayer_number": inv.taxpayer_number,
+                "account_number": inv.account_number,
+                "client": inv.client,
+                "invoice_period_year": inv.invoice_period_year,
+                "invoice_period_month": inv.invoice_period_month,
+                "amount_to_pay": inv.amount_to_pay,
+                "total_amount": inv.total_amount,
+                "media": 0,
+                "sent_validar": inv.sent_validar,
+                "quitar": inv.quitar,
+                "pdffile": inv.pdffile
+            }
+            for inv in invoices
+        ]
+        return jsonify(result)
+    except SQLAlchemyError as e:
+        current_app.logger.error(f"Erro ao obter faturas: {str(e)}")
+        return jsonify({"error": "Erro ao obter faturas"}), 500
+
 
 # ❌ TEMPORARILY DISABLE ALL ROUTES THAT USE get_connection()
 # @invoices_bp.route("/api/faturas/<invoice_number>/quitar", methods=["PUT"])

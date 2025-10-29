@@ -23,7 +23,7 @@ USERS_INDEX_LIST = "users.list_users"
 # After migration succeeds, these routes will be refactored to ORM-based versions.
 
 
-@users_bp.route("/users")
+@users_bp.route("/")
 @admin_required
 def list_users():
     """List placeholder users (migration mode)"""
@@ -41,7 +41,7 @@ def list_users():
     )
 
 
-@users_bp.route("/users/add", methods=["POST"])
+@users_bp.route("/add", methods=["POST"])
 @admin_required
 def add_user():
     """Temporarily disabled DB logic"""
@@ -49,7 +49,7 @@ def add_user():
     return redirect(url_for(USERS_INDEX_LIST))
 
 
-@users_bp.route("/users/edit/<int:user_id>", methods=["POST"])
+@users_bp.route("/edit/<int:user_id>", methods=["POST"])
 @admin_required
 def edit_user(user_id):
     """Temporarily disabled DB logic"""
@@ -57,7 +57,7 @@ def edit_user(user_id):
     return redirect(url_for(USERS_INDEX_LIST))
 
 
-@users_bp.route("/users/delete/<int:user_id>", methods=["POST"])
+@users_bp.route("/delete/<int:user_id>", methods=["POST"])
 @admin_required
 def delete_user(user_id):
     """Temporarily disabled DB logic"""
