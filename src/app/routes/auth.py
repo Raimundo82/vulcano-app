@@ -1,15 +1,16 @@
 from flask import (
     Blueprint,
+    current_app,
+    flash,
+    redirect,
     render_template,
     request,
-    redirect,
-    url_for,
-    flash,
     session,
-    current_app,
+    url_for,
 )
-from ..utils.ldap_auth import authenticate_user
+
 from ..db import get_connection  # Adicionar esta importação
+from ..utils.ldap_auth import authenticate_user
 
 auth_bp = Blueprint("auth", __name__)
 

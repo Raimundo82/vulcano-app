@@ -1,19 +1,17 @@
 import mysql.connector
 from flask import (
     Blueprint,
+    current_app,
+    flash,
+    redirect,
     render_template,
     request,
-    redirect,
-    url_for,
-    flash,
     session,
-    jsonify,
-    abort,
-    current_app,
+    url_for,
 )
-from ..utils.auth_decorators import login_required, admin_required
-from ..config import Config
+
 from ..db import get_connection
+from ..utils.auth_decorators import admin_required
 
 users_bp = Blueprint("users", __name__)
 

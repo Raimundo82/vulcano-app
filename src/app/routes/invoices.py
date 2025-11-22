@@ -1,30 +1,29 @@
-from flask import (
-    Blueprint,
-    render_template,
-    request,
-    jsonify,
-    redirect,
-    url_for,
-    flash,
-    send_from_directory,
-    make_response,
-    session,
-)
-from datetime import datetime
 import os
 import shutil
 import tempfile
-from ..models.invoice import (
-    extract_invoice_data,
-    save_to_database,
-    verificar_tarifario,
-    verificar_conta,
-    extract_account,
+from datetime import datetime
+
+import mysql.connector
+from flask import (
+    Blueprint,
+    current_app,
+    flash,
+    jsonify,
+    make_response,
+    redirect,
+    render_template,
+    request,
+    send_from_directory,
+    session,
+    url_for,
 )
-from ..utils.pdf_utils import generate_pdf_with_table
-from ..config import Config
+
 from app.db import get_connection
+
+from ..config import Config
+from ..models.invoice import extract_invoice_data, save_to_database, verificar_conta
 from ..utils.auth_decorators import login_required
+from ..utils.pdf_utils import generate_pdf_with_table
 
 invoices_bp = Blueprint("invoices", __name__)
 

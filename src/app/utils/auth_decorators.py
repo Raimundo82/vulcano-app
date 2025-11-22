@@ -1,6 +1,7 @@
 from functools import wraps
-from flask import session, jsonify, redirect, url_for, flash, request, current_app
-from .ldap_auth import authenticate_user
+
+from flask import current_app, flash, redirect, session, url_for
+
 from ..db import get_connection
 
 

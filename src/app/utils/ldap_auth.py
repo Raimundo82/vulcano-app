@@ -1,7 +1,10 @@
-from ldap3 import Server, Connection, ALL, Tls
 import ssl
-from ..config import Config
+
+from ldap3 import ALL, Connection, Server, Tls
+
 from app.db import get_connection
+
+from ..config import Config
 
 
 def authenticate_user(username, password):

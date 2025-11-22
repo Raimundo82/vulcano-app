@@ -1,12 +1,14 @@
-from .routes.users import users_bp
-from .routes.units import units_bp
-from .routes.invoices import invoices_bp
-from .routes.auth import auth_bp
-from datetime import timedelta
 import os
+from datetime import timedelta
+
 from flask import Flask
 from flask_mysqldb import MySQL
+
 from .config import Config, DevelopmentConfig, ProductionConfig
+from .routes.auth import auth_bp
+from .routes.invoices import invoices_bp
+from .routes.units import units_bp
+from .routes.users import users_bp
 
 app = Flask(__name__)
 app.config.from_object(

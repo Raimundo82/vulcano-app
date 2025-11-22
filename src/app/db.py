@@ -1,5 +1,6 @@
 # app/db.py
 import mysql.connector
+
 from app.config import Config
 
 

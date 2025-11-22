@@ -1,7 +1,3 @@
-import mysql.connector
-from ..config import Config
-
-
 def register_user(username, display_name, email):
     # Implementation here
     pass

@@ -1,10 +1,11 @@
-import os
 import re
+
 import fitz  # PyMuPDF
 import mysql.connector
-from datetime import datetime
-from ..config import Config
+
 from app.db import get_connection
+
+from ..config import Config
 
 
 def process_amount_to_pay(amount_str):

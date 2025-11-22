@@ -1,18 +1,19 @@
 import os
-from io import BytesIO
 from datetime import datetime
-from reportlab.lib.pagesizes import A4
+from io import BytesIO
+
+from flask import current_app
 from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import (
+    Image,
+    Paragraph,
     SimpleDocTemplate,
+    Spacer,
     Table,
     TableStyle,
-    Paragraph,
-    Spacer,
-    Image,
 )
-from flask import current_app
 
 
 def generate_pdf_with_table(faturas):
