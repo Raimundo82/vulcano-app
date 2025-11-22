@@ -40,8 +40,6 @@
 				"oderwat.indent-rainbow",
 				"ms-python.black-formatter",
 				"njpwerner.autodocstring",
-				"VisualStudioExptTeam.vscodeintellicode",
-				"VisualStudioExptTeam.intellicode-api-usage-examples",
 				"zeshuaro.vscode-python-poetry",
 				"redhat.vscode-yaml",
 				"tamasfe.even-better-toml",
