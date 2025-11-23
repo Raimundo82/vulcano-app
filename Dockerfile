@@ -1,47 +1,30 @@
+# buildtime
 FROM python:3.12-slim-bullseye AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Install build dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    default-libmysqlclient-dev \
-    pkg-config \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Poetry
 RUN pip install --no-cache-dir poetry==2.2.1
 
-# Copy dependency files and source code
+RUN poetry self add poetry-plugin-export
+
 COPY pyproject.toml poetry.lock ./
 COPY src/ ./src/
 
-# Build wheel
-RUN poetry build
+RUN poetry export -f requirements.txt --output requirements.txt --without-hashes && \
+    poetry build
 
-# Production stage
+# runtime
 FROM python:3.12-slim-bullseye
 
 WORKDIR /app
 
-# Install runtime dependencies only
-RUN apt-get update && apt-get install -y \
-    default-libmysqlclient-dev \
-    && rm -rf /var/lib/apt/lists/*
+COPY --from=builder /app/requirements.txt /app/dist/*.whl ./
 
-# Copy wheel from builder
-COPY --from=builder /app/dist/*.whl ./
+RUN pip install --no-cache-dir -r requirements.txt *.whl && \
+    rm requirements.txt *.whl
 
-# Install wheel
-RUN pip install --no-cache-dir *.whl && rm *.whl
-
-# Expose port
-EXPOSE 5000
-
-# Set environment variables
-ENV FLASK_APP=app.app
 ENV PYTHONUNBUFFERED=1
 
-# Run the application
-CMD ["python", "-m", "flask", "run", "--host=0.0.0.0"]
+EXPOSE 5000
+
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app.app:app"]
