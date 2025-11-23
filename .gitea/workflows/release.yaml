@@ -1,0 +1,43 @@
+name: Release Image on Tag
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Print context
+        run: |
+          echo "gitea.ref   = ${{ gitea.ref }}"
+          echo "gitea.tag   = ${{ gitea.tag }}"
+          echo "gitea.sha   = ${{ gitea.sha }}"
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ssh-key: ${{ secrets.SSH_KEY }}
+          ssh-known-hosts: ${{ vars.SSH_KNOWN_HOSTS }}
+
+      - name: Log in to registry
+        run: docker login ${{ vars.REGISTRY_SERVER }} -u ${{ vars.USERNAME }} -p ${{ secrets.PACKAGE_UPLOAD_TOKEN }}
+
+      - name: Extract TAG
+        run: |
+          TAG="${{ gitea.ref#refs/tags/v }}"
+          echo "TAG=$TAG"
+          echo "TAG=$TAG" >> $GITHUB_ENV
+
+      - name: Build image
+        run: |
+          docker build -t ${{ vars.REGISTRY_SERVER }}/marinha-si/vulcano-app:$TAG .
+          docker tag ${{ vars.REGISTRY_SERVER }}/marinha-si/vulcano-app:$TAG ${{ vars.REGISTRY_SERVER }}/marinha-si/vulcano-app:latest
+
+      - name: Push images
+        run: |
+          docker push registry.example.com/myorg/myapp:$TAG
+          docker push registry.example.com/myorg/myapp:latest
