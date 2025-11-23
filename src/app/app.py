@@ -2,7 +2,6 @@ import os
 from datetime import timedelta
 
 from flask import Flask
-from flask_mysqldb import MySQL
 
 from .config import Config, DevelopmentConfig, ProductionConfig
 from .routes.auth import auth_bp
@@ -24,11 +23,7 @@ app.config.update(
     PERMANENT_SESSION_LIFETIME=timedelta(hours=8),
 )
 
-# Initialize MySQL
-mysql = MySQL(app)
-
 # Import routes
-
 
 # Register Blueprints
 app.register_blueprint(auth_bp)
