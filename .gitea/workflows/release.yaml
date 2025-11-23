@@ -40,5 +40,5 @@ jobs:
 
       - name: Push images
         run: |
-          docker push registry.example.com/myorg/myapp:$TAG
-          docker push registry.example.com/myorg/myapp:latest
+          docker push ${{ vars.REGISTRY_SERVER }}/marinha-si/vulcano-app:$TAG
+          docker push ${{ vars.REGISTRY_SERVER }}/marinha-si/vulcano-app:latest
