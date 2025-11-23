@@ -1,6 +1,10 @@
 # buildtime
 FROM python:3.12-slim-bullseye AS builder
 
+ENV http_proxy=http://proxy-n-wcg.marinha.pt:8080
+ENV https_proxy=http://proxy-n-wcg.marinha.pt:8080
+ENV no_proxy="marinha.pt,.marinha.pt,localhost"
+
 WORKDIR /app
 
 RUN pip install --no-cache-dir poetry==2.2.1
@@ -15,6 +19,10 @@ RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
 
 # runtime
 FROM python:3.12-slim-bullseye
+
+ENV http_proxy=http://proxy-n-wcg.marinha.pt:8080
+ENV https_proxy=http://proxy-n-wcg.marinha.pt:8080
+ENV no_proxy="marinha.pt,.marinha.pt,localhost"
 
 WORKDIR /app
 
