@@ -28,7 +28,7 @@ jobs:
 
       - name: Extract TAG
         run: |
-          TAG="${{ gitea.ref#refs/tags/v }}"
+          TAG="${{ gitea.ref##refs/tags/v }}"
           echo "TAG=$TAG"
           echo "TAG=$TAG" >> $GITHUB_ENV
 
