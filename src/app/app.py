@@ -2,6 +2,7 @@ import os
 from datetime import timedelta
 
 from flask import Flask
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from .config import Config, DevelopmentConfig, ProductionConfig
 from .routes.auth import auth_bp
@@ -10,6 +11,7 @@ from .routes.units import units_bp
 from .routes.users import users_bp
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 app.config.from_object(
     ProductionConfig if os.getenv("FLASK_ENV") == "production" else DevelopmentConfig
 )
