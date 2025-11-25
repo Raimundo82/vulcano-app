@@ -172,3 +172,5 @@ config_dev.py
 .sonarlint
 pdfs/
 processed/
+
+k8s/vulcano-secrets.yaml
