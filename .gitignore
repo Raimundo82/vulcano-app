@@ -173,4 +173,5 @@ config_dev.py
 pdfs/
 processed/
 
+# k8s
 k8s/vulcano-secrets.yaml

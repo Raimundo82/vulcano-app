@@ -1,0 +1,94 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vulcano-app
+  namespace: dsi-paas
+  labels:
+    app: vulcano-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vulcano-app
+  template:
+    metadata:
+      labels:
+        app: vulcano-app
+    spec:
+      imagePullSecrets:
+        - name: devops-01
+      initContainers:
+        - name: init-folders
+          image: busybox
+          command: ["sh", "-c", "mkdir -p /data/pdfs /data/processed"]
+          volumeMounts:
+            - name: vulcano-app-data
+              mountPath: /data
+      containers:
+        - name: vulcano-app
+          image: devops-01.marinha.pt/marinha-si/vulcano-app:0.1.2
+          ports:
+            - containerPort: 5000
+              name: http
+              protocol: TCP
+          volumeMounts:
+            - name: vulcano-app-data
+              mountPath: /app/pdfs
+              subPath: pdfs
+            - name: vulcano-app-data
+              mountPath: /app/processed
+              subPath: processed
+          env:
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: vulcano-configmap
+                  key: DB_NAME
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: vulcano-configmap
+                  key: DB_HOST
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: vulcano-secrets
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: vulcano-secrets
+                  key: DB_PASSWORD
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: vulcano-secrets
+                  key: SECRET_KEY
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            tcpSocket:
+              port: 5000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            tcpSocket:
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+      restartPolicy: Always
+      volumes:
+        - name: vulcano-app-data
+          persistentVolumeClaim:
+            claimName: vulcano-app-pvc

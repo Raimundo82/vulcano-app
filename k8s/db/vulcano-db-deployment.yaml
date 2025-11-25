@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vulcano-db
+  namespace: dsi-paas
+  labels:
+    app: vulcano-db
+spec:
+  selector:
+    matchLabels:
+      app: vulcano-db
+      tier: mysql-db
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: vulcano-db
+        tier: mysql-db
+    spec:
+      containers:
+        - image: mysql:8.0
+          name: vulcano-db-mysql
+          env:
+            - name: MYSQL_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: vulcano-configmap
+                  key: MYSQL_DATABASE
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: vulcano-secrets
+                  key: MYSQL_ROOT_PASSWORD
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: vulcano-secrets
+                  key: MYSQL_USER
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: vulcano-secrets
+                  key: MYSQL_PASSWORD
+          ports:
+            - containerPort: 3306
+              name: mysql
+          volumeMounts:
+            - mountPath: /var/lib/mysql
+              name: vulcano-db-data
+      volumes:
+        - name: vulcano-db-data
+          persistentVolumeClaim:
+            claimName: vulcano-db-pvc

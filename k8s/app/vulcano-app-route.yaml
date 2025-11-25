@@ -1,0 +1,20 @@
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: vulcano-app
+  namespace: dsi-paas
+  labels:
+    app: vulcano-app
+spec:
+  host: vulcano-app.apps.okd-01.marinha.pt
+  to:
+    kind: Service
+    name: vulcano-app
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None
