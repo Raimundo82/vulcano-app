@@ -10855,6 +10855,14 @@ VALUES (
         'pinto.alves@marinha.pt',
         0,
         '2025-07-09 14:29:01'
+    ),
+    (
+        15,
+        'm22600',
+        'CFR EN-AEL Pacheco Raimundo',
+        'pacheco.raimundo@marinha.pt',
+        1,
+        '2025-07-01 22:45:55'
     );
 --
 -- Índices para tabelas despejadas
