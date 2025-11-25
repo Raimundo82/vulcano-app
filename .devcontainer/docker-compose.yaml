@@ -13,6 +13,8 @@ services:
 
     volumes:
       - ../..:/workspaces:cached
+      - ../pdfs:/workspaces/vulcano-app/pdfs
+      - ../processed:/workspaces/vulcano-app/processed
 
     command: sleep infinity
     network_mode: service:db
