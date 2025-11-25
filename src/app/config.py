@@ -119,10 +119,10 @@ class Config:
     ]
 
     # MySQL configurations
-    MYSQL_HOST = "db"
-    MYSQL_USER = "vulcano"
-    MYSQL_PASSWORD = "vulcano"
-    MYSQL_DB = "vulcano_db"
+    MYSQL_HOST = os.getenv("DB_HOST", "db")
+    MYSQL_USER = os.getenv("DB_USER", "vulcano")
+    MYSQL_PASSWORD = os.getenv("DB_PASSWORD")
+    MYSQL_DB = os.getenv("DB_NAME", "vulcano_db")
     MYSQL_CHARSET = "utf8mb4"
 
     # LDAP configurations
