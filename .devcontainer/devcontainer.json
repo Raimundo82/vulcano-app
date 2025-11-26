@@ -46,7 +46,9 @@
 				"SonarSource.sonarlint-vscode",
 				"me-dutour-mathieu.vscode-github-actions",
 				"mtxr.sqltools",
-				"mtxr.sqltools-driver-mysql"
+				"mtxr.sqltools-driver-mysql",
+				"GitHub.copilot-chat",
+				"cweijan.vscode-mysql-client2"
 			]
 		}
 	},
