@@ -1,2 +1,0 @@
-ALTER TABLE invoices
-ADD COLUMN invoice_type VARCHAR(3) NOT NULL DEFAULT 'N\D' AFTER id;
