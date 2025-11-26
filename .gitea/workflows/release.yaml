@@ -42,3 +42,24 @@ jobs:
         run: |
           docker push ${{ vars.REGISTRY_SERVER }}/marinha-si/vulcano-app:$TAG
           docker push ${{ vars.REGISTRY_SERVER }}/marinha-si/vulcano-app:latest
+
+      - name: Download Kubectl binaries
+        run: curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+
+      - name: Install Kubectl
+        run: sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+
+      - name: Extract base64 encoded config
+        run: echo "${{ secrets.KUBECONFIG_DSI_PAAS_ENCODED }}" | base64 -d > /tmp/config
+
+      - name: Apply pvc, deployment, service, route
+        run: kubectl --kubeconfig=/tmp/config -n ${{ vars.DSI_PAAS_NS }} apply -f k8s/app/
+
+      - name: Update deployment image
+        env:
+          GITEA_REF: ${{ gitea.ref }}
+          DEPLOYMENT_NAME: vulcano-app
+
+        run: |
+          echo "TAG=$TAG"
+          kubectl --kubeconfig=/tmp/config -n ${{ vars.DSI_PAAS_NS }} set image deployment/vulcano-app vulcano-app=devops-01.marinha.pt/marinha-si/vulcano-app:$TAG
