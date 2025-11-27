@@ -287,7 +287,8 @@ def get_quitadas():
 @invoices_bp.route("/processed/<path:filename>")
 @login_required
 def processed_files(filename):
-    return send_from_directory("/workspaces/vulcano-app/processed", filename)
+    # Use configured processed directory so it works in containers/OKD
+    return send_from_directory(Config.PROCESSED_DIR, filename)
 
 
 @invoices_bp.route("/quitar-faturas", methods=["GET", "POST"])

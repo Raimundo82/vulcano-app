@@ -180,7 +180,8 @@ class Config:
 
     # Paths
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    PROCESSED_DIR = os.path.join(BASE_DIR, "processed")
+    PROJECT_ROOT = os.path.abspath(os.path.join(BASE_DIR, "..", ".."))
+    PROCESSED_DIR = os.getenv("PROCESSED_DIR", os.path.join(PROJECT_ROOT, "processed"))
 
 
 class DevelopmentConfig(Config):
