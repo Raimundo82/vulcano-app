@@ -182,6 +182,7 @@ class Config:
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     PROJECT_ROOT = os.path.abspath(os.path.join(BASE_DIR, "..", ".."))
     PROCESSED_DIR = os.getenv("PROCESSED_DIR", os.path.join(PROJECT_ROOT, "processed"))
+    PDFS_DIR = os.getenv("PDFS_DIR", os.path.join(PROJECT_ROOT, "pdfs"))
 
 
 class DevelopmentConfig(Config):

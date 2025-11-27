@@ -45,6 +45,16 @@ spec:
               mountPath: /app/processed
               subPath: processed
           env:
+            - name: PROCESSED_DIR
+              valueFrom:
+                configMapKeyRef:
+                  name: vulcano-configmap
+                  key: PROCESSED_DIR
+            - name: PDFS_DIR
+              valueFrom:
+                configMapKeyRef:
+                  name: vulcano-configmap
+                  key: PDFS_DIR
             - name: DB_NAME
               valueFrom:
                 configMapKeyRef:

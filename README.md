@@ -3,7 +3,8 @@
 - `VS Code` with `Remote Explorer` extensions
 
 ### Env Variables
-- Create a `.env` file in `.devcontainer` folder with following keys:
+
+#### Development (.env file in `.devcontainer` folder)
 ```sh
 DB_USER=vulcano
 DB_PASSWORD=<db password>
@@ -11,7 +12,19 @@ DB_NAME=vulcano_db
 SECRET_KEY=<your secret>
 ```
 
-### Activate `venv` is current shell
+#### Production (OKD/Kubernetes ConfigMap and Secrets)
+Required in ConfigMap:
+- `DB_HOST` - Database service hostname
+- `DB_NAME` - Database name
+- `PROCESSED_DIR` - Path to processed files folder (e.g., `/app/processed`)
+- `PDFS_DIR` - Path to PDF storage folder (e.g., `/app/pdfs`)
+
+Required in Secrets:
+- `SECRET_KEY` - Flask secret key
+- `DB_USER` - Database user
+- `DB_PASSWORD` - Database password
+
+### Activate `venv` in current shell
 ```sh
 poetry env activate
 ```

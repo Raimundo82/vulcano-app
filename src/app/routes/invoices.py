@@ -49,7 +49,7 @@ def upload_faturas():
             file.save(temp_path)
             conta_inf = verificar_conta(temp_path)
             if conta_inf[0]:
-                file_path = os.path.join("pdfs", file.filename)
+                file_path = os.path.join(Config.PDFS_DIR, file.filename)
                 shutil.copy(temp_path, file_path)
                 uploaded_count += 1
                 flash(f"Fatura {file.filename} carregada com sucesso!", "success")
@@ -71,8 +71,8 @@ def upload_faturas():
 @invoices_bp.route("/process", methods=["GET"])
 @login_required
 def process_invoices():
-    pdf_folder = "pdfs"
-    processed_folder = "processed"
+    pdf_folder = Config.PDFS_DIR
+    processed_folder = Config.PROCESSED_DIR
     invoices_data = []
 
     for filename in os.listdir(pdf_folder):
@@ -287,7 +287,6 @@ def get_quitadas():
 @invoices_bp.route("/processed/<path:filename>")
 @login_required
 def processed_files(filename):
-    # Use configured processed directory so it works in containers/OKD
     return send_from_directory(Config.PROCESSED_DIR, filename)
 
 
