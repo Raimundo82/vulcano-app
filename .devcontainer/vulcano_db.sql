@@ -1,4 +1,5 @@
 DROP TABLE IF EXISTS users, unidades, invoices;
+SET NAMES 'utf8mb4';
 
 CREATE TABLE invoices (
     id int NOT NULL AUTO_INCREMENT,
@@ -14655,5 +14656,13 @@ VALUES (
         'CFR Pinto Alves',
         'pinto.alves@marinha.pt',
         0,
+        '2025-07-09 14:29:01'
+    ),
+    (
+        15,
+        'm22600',
+        'CFR EN-AEL Pacheco Raimundo',
+        'pacheco.raimundo@marinha.pt',
+        1,
         '2025-07-09 14:29:01'
     );
