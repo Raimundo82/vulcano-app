@@ -2,9 +2,11 @@ import os
 from datetime import timedelta
 
 from flask import Flask
+from flask_migrate import Migrate
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from .config import Config, DevelopmentConfig, ProductionConfig
+from .db import db
 from .routes.auth import auth_bp
 from .routes.invoices import invoices_bp
 from .routes.units import units_bp
@@ -25,7 +27,12 @@ app.config.update(
     PERMANENT_SESSION_LIFETIME=timedelta(hours=8),
 )
 
-# Import routes
+# Initialize SQLAlchemy and Flask-Migrate
+db.init_app(app)
+migrate = Migrate(app, db)
+
+# Import domain models so Flask-Migrate can detect them for migrations
+from . import domain as _  # noqa: F401, E402
 
 # Register Blueprints
 app.register_blueprint(auth_bp)

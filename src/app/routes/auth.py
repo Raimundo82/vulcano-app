@@ -9,10 +9,12 @@ from flask import (
     url_for,
 )
 
-from ..db import get_connection  # Adicionar esta importação
+from ..domain.repositories import UserRepository
 from ..utils.ldap_auth import authenticate_user
 
 auth_bp = Blueprint("auth", __name__)
+
+_user_repo = UserRepository()
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])
@@ -22,31 +24,14 @@ def login():
         password = request.form.get("password")
         user = authenticate_user(username, password)
         if user:
-            # Update last_login in database
-            conn = None
-            cursor = None
             try:
-                conn = get_connection()
-                cursor = conn.cursor()
-                cursor.execute(
-                    "UPDATE users SET last_login = NOW() WHERE username = %s",
-                    (username,),
-                )
-                conn.commit()
-                current_app.logger.info(
-                    f"Last_login updated for user {username}"
-                )  # Log de confirmação
+                _user_repo.update_last_login(username)
+                current_app.logger.info(f"Last_login updated for user {username}")
             except Exception as e:
-                conn.rollback()  # Importante fazer rollback em caso de erro
                 current_app.logger.error(
                     f"Error updating last_login: {str(e)}", exc_info=True
                 )
                 flash("Aviso: Não foi possível registar a hora de login", "warning")
-            finally:
-                if cursor:
-                    cursor.close()
-                if conn:
-                    conn.close()
 
             # Set session variables
             session["username"] = user["username"]

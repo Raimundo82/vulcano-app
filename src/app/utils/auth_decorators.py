@@ -2,7 +2,7 @@ from functools import wraps
 
 from flask import current_app, flash, redirect, session, url_for
 
-from ..db import get_connection
+from ..domain.repositories import UserRepository
 
 
 def login_required(f):
@@ -21,21 +21,13 @@ def admin_required(f):
     def decorated_function(*args, **kwargs):
         if "username" not in session:
             flash("Por favor faça login", "warning")
-            return redirect(url_for("auth.login"))  # Fixed endpoint
+            return redirect(url_for("auth.login"))
 
         try:
-            with get_connection() as conn:
-                with conn.cursor(dictionary=True) as cursor:
-                    cursor.execute(
-                        "SELECT is_admin FROM users WHERE username = %s",
-                        (session["username"],),
-                    )
-                    user = cursor.fetchone()
-
-                    if not user or not user["is_admin"]:
-                        flash("Acesso restrito a administradores", "danger")
-                        return redirect(url_for("invoices.index"))  # Fixed endpoint
-
+            user = UserRepository().get_by_username(session["username"])
+            if not user or not user.is_admin:
+                flash("Acesso restrito a administradores", "danger")
+                return redirect(url_for("invoices.index"))
         except Exception as e:
             current_app.logger.error(f"Admin check failed: {str(e)}")
             flash("Erro ao verificar permissões", "danger")

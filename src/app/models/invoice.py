@@ -1,11 +1,9 @@
 import re
 
 import fitz  # PyMuPDF
-import mysql.connector
-
-from app.db import get_connection
 
 from ..config import Config
+from ..domain.repositories import InvoiceRepository
 
 
 def process_amount_to_pay(amount_str):
@@ -215,73 +213,7 @@ def verificar_conta(
 def save_to_database(data):
     """Salva os dados extraídos no banco de dados."""
     try:
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        check_query = """
-        SELECT id FROM invoices
-        WHERE invoice_number = %s
-        """
-        cursor.execute(check_query, (data["invoice_number"],))
-        existing_invoice = cursor.fetchone()
-
-        if existing_invoice:
-            update_query = """
-            UPDATE invoices
-            SET invoice_type = %s,issue_date = %s, taxpayer_number = %s, account_number = %s, client = %s, address = %s, cvp = %s,
-                invoice_period_month = %s, invoice_period_year = %s, total_amount = %s, amount_to_pay = %s,
-                sent_validar = %s, quitar = %s, pdffile = %s
-            WHERE invoice_number = %s
-            """
-            cursor.execute(
-                update_query,
-                (
-                    data["invoice_type"],
-                    data["issue_date"],
-                    data["taxpayer_number"],
-                    data["account_number"],
-                    data["client"],
-                    data["address"],
-                    data["cvp"],
-                    data["invoice_period_month"],
-                    data["invoice_period_year"],
-                    data["total_amount"],
-                    data["amount_to_pay"],
-                    data.get("sent_validar", False),
-                    data.get("quitar", False),
-                    data.get("pdffile"),
-                    data["invoice_number"],
-                ),
-            )
-        else:
-            insert_query = """
-            INSERT INTO invoices (invoice_type, invoice_number, issue_date, taxpayer_number, account_number, client, address, cvp, invoice_period_month, invoice_period_year, total_amount, amount_to_pay, sent_validar, quitar, pdffile)
-            VALUES (%s,%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """
-            cursor.execute(
-                insert_query,
-                (
-                    data["invoice_type"],
-                    data["invoice_number"],
-                    data["issue_date"],
-                    data["taxpayer_number"],
-                    data["account_number"],
-                    data["client"],
-                    data["address"],
-                    data["cvp"],
-                    data["invoice_period_month"],
-                    data["invoice_period_year"],
-                    data["total_amount"],
-                    data["amount_to_pay"],
-                    data.get("sent_validar", False),
-                    data.get("quitar", False),
-                    data.get("pdffile"),
-                ),
-            )
-
-        conn.commit()
-        cursor.close()
-        conn.close()
+        InvoiceRepository().save(data)
         print(f"Dados salvos no banco de dados: {data}")
-    except mysql.connector.Error as err:
+    except Exception as err:
         print(f"Erro ao salvar no banco de dados: {err}")

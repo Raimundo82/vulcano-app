@@ -168,6 +168,14 @@ class Config:
     MYSQL_DB = os.getenv("DB_NAME", "vulcano_db")
     MYSQL_CHARSET = "utf8mb4"
 
+    SQLALCHEMY_DATABASE_URI = (
+        f"mysql+mysqlconnector://{os.getenv('DB_USER', 'vulcano')}"
+        f":{os.getenv('DB_PASSWORD')}"
+        f"@{os.getenv('DB_HOST', 'db')}"
+        f"/{os.getenv('DB_NAME', 'vulcano_db')}?charset=utf8mb4"
+    )
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+
     # LDAP configurations
     LDAP_HOST = "n-dom-1.marinha.pt"
     LDAP_PORT = 636

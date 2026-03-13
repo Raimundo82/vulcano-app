@@ -3,7 +3,6 @@ import shutil
 import tempfile
 from datetime import datetime
 
-import mysql.connector
 from flask import (
     Blueprint,
     current_app,
@@ -17,15 +16,17 @@ from flask import (
     session,
     url_for,
 )
-
-from app.db import get_connection
+from sqlalchemy.exc import SQLAlchemyError
 
 from ..config import Config
+from ..domain.repositories import InvoiceRepository
 from ..models.invoice import extract_invoice_data, save_to_database, verificar_conta
 from ..utils.auth_decorators import login_required
 from ..utils.pdf_utils import generate_pdf_with_table
 
 invoices_bp = Blueprint("invoices", __name__)
+
+_invoice_repo = InvoiceRepository()
 
 
 @invoices_bp.route("/")
@@ -120,48 +121,13 @@ def process_invoices():
 @login_required
 def get_faturas():
     try:
-        conn = get_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute(
-            """
-            SELECT
-                invoice_type,
-                invoice_number,
-                issue_date,
-                taxpayer_number,
-                account_number,
-                client,
-                invoice_period_year,
-                invoice_period_month,
-                amount_to_pay,
-                total_amount,
-                sent_validar,
-                quitar,
-                pdffile
-            FROM invoices
-            WHERE quitar = 0
-        """
-        )
-        faturas = cursor.fetchall()
-
-        for fatura in faturas:
-            account_number = fatura["account_number"]
-            cursor.execute(
-                """
-                SELECT AVG(total_amount) AS media
-                FROM invoices
-                WHERE account_number = %s
-                AND issue_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
-            """,
-                (account_number,),
-            )
-            resultado = cursor.fetchone()
-            fatura["media"] = resultado["media"] if resultado["media"] else 0.0
-
-        cursor.close()
-        conn.close()
+        faturas = []
+        for invoice in _invoice_repo.get_unpaid():
+            fatura = invoice.to_dict()
+            fatura["media"] = _invoice_repo.get_12month_average(invoice.account_number)
+            faturas.append(fatura)
         return jsonify(faturas)
-    except mysql.connector.Error as err:
+    except SQLAlchemyError as err:
         return jsonify({"error": str(err)}), 500
 
 
@@ -171,23 +137,9 @@ def update_quitar(invoice_number):
     try:
         data = request.get_json()
         quitar = data.get("quitar", False)
-        quita_date = datetime.now()
-
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            UPDATE invoices
-            SET quitar = %s, quita_date = %s
-            WHERE invoice_number = %s
-        """,
-            (quitar, quita_date, invoice_number),
-        )
-        conn.commit()
-        cursor.close()
-        conn.close()
+        _invoice_repo.set_paid_status(invoice_number, quitar)
         return jsonify({"success": True})
-    except mysql.connector.Error as err:
+    except SQLAlchemyError as err:
         return jsonify({"error": str(err)}), 500
 
 
@@ -208,15 +160,8 @@ def eliminar_faturas():
         data = request.get_json()
         invoices_to_delete = data.get("invoices", [])
 
-        conn = get_connection()
-        cursor = conn.cursor()
-
         for invoice in invoices_to_delete:
-            cursor.execute(
-                "DELETE FROM invoices WHERE invoice_number = %s",
-                (invoice["invoiceNumber"],),
-            )
-            conn.commit()
+            _invoice_repo.delete_by_number(invoice["invoiceNumber"])
 
             pdf_path = os.path.join(
                 Config.PROCESSED_DIR,
@@ -227,8 +172,6 @@ def eliminar_faturas():
             if os.path.exists(pdf_path):
                 os.remove(pdf_path)
 
-        cursor.close()
-        conn.close()
         return jsonify({"success": True, "message": "Faturas eliminadas com sucesso."})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -238,49 +181,13 @@ def eliminar_faturas():
 @login_required
 def get_quitadas():
     try:
-        conn = get_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute(
-            """
-            SELECT
-                invoice_type,
-                invoice_number,
-                issue_date,
-                taxpayer_number,
-                account_number,
-                client,
-                invoice_period_year,
-                invoice_period_month,
-                amount_to_pay,
-                total_amount,
-                sent_validar,
-                quitar,
-                quita_date,
-                pdffile
-            FROM invoices
-            WHERE quitar = 1
-        """
-        )
-        faturas = cursor.fetchall()
-
-        for fatura in faturas:
-            account_number = fatura["account_number"]
-            cursor.execute(
-                """
-                SELECT AVG(total_amount) AS media
-                FROM invoices
-                WHERE account_number = %s
-                AND issue_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
-            """,
-                (account_number,),
-            )
-            resultado = cursor.fetchone()
-            fatura["media"] = resultado["media"] if resultado["media"] else 0.0
-
-        cursor.close()
-        conn.close()
+        faturas = []
+        for invoice in _invoice_repo.get_paid():
+            fatura = invoice.to_dict()
+            fatura["media"] = _invoice_repo.get_12month_average(invoice.account_number)
+            faturas.append(fatura)
         return jsonify(faturas)
-    except mysql.connector.Error as err:
+    except SQLAlchemyError as err:
         return jsonify({"error": str(err)}), 500
 
 
@@ -303,21 +210,9 @@ def quitar_faturas():
             if not faturas_marcadas:
                 return jsonify({"error": "Nenhuma fatura marcada."}), 400
 
-            # Use context manager for database connection
-            with get_connection() as conn:
-                with conn.cursor(dictionary=True) as cursor:
-                    placeholders = ",".join(["%s"] * len(faturas_marcadas))
-                    query = f"""
-                        SELECT account_number, invoice_number,
-                               invoice_period_month, invoice_period_year,
-                               total_amount
-                        FROM invoices
-                        WHERE invoice_number IN ({placeholders})
-                    """
-                    cursor.execute(query, faturas_marcadas)
-                    faturas = cursor.fetchall()
+            invoices = _invoice_repo.get_by_numbers(faturas_marcadas)
+            faturas = [inv.to_dict() for inv in invoices]
 
-            # Generate PDF only if we got results
             if not faturas:
                 return jsonify({"error": "Nenhuma fatura encontrada"}), 404
 
@@ -329,7 +224,7 @@ def quitar_faturas():
             )
             return response
 
-        except Exception as err:  # Catch all exceptions
+        except Exception as err:
             current_app.logger.error(f"Error in quitar_faturas: {str(err)}")
             return jsonify({"error": "Erro interno no servidor"}), 500
 
@@ -346,97 +241,40 @@ def quitar_faturas_marcadas():
         if not faturas_marcadas:
             return jsonify({"error": "Nenhuma fatura marcada."}), 400
 
-        conn = get_connection()
-        cursor = conn.cursor()
-        quita_date = datetime.now()
-
-        for invoice_number in faturas_marcadas:
-            cursor.execute(
-                """
-                UPDATE invoices
-                SET quitar = 1, quita_date = %s
-                WHERE invoice_number = %s
-            """,
-                (quita_date, invoice_number),
-            )
-
-        conn.commit()
-        cursor.close()
-        conn.close()
+        count = _invoice_repo.mark_paid_multiple(faturas_marcadas)
         return jsonify(
             {
                 "success": True,
-                "message": f"{len(faturas_marcadas)} faturas quitadas com sucesso.",
+                "message": f"{count} faturas quitadas com sucesso.",
             }
         )
-    except mysql.connector.Error as err:
+    except SQLAlchemyError as err:
         return jsonify({"error": str(err)}), 500
 
 
 @invoices_bp.route("/account/<account_number>")
-@login_required  # Uncomment when authentication is ready
+@login_required
 def account_details(account_number):
     try:
-        # Use your existing get_connection() function or direct mysql.connection
-        conn = get_connection()  # Or: conn = mysql.connection
-        cursor = conn.cursor(dictionary=True)
+        latest = _invoice_repo.get_latest_by_account(account_number)
+        client_name = latest.client if latest else "Cliente não encontrado"
 
-        # Get client name and most recent invoice
-        cursor.execute(
-            """
-            SELECT invoice_number, issue_date, total_amount, client
-            FROM invoices
-            WHERE account_number = %s
-            ORDER BY issue_date DESC
-            LIMIT 1
-        """,
-            (account_number,),
-        )
+        invoices = _invoice_repo.get_by_account(account_number, limit=12)
+        average_value = _invoice_repo.get_12month_average(account_number)
 
-        invoice_data = cursor.fetchone()
-        client_name = (
-            invoice_data["client"] if invoice_data else "Cliente não encontrado"
-        )
+        invoices_list = [inv.to_dict() for inv in invoices]
+        invoices_list.reverse()
 
-        # Get last 12 invoices for the chart
-        cursor.execute(
-            """
-            SELECT invoice_number, issue_date, total_amount
-            FROM invoices
-            WHERE account_number = %s
-            ORDER BY issue_date DESC
-            LIMIT 12
-        """,
-            (account_number,),
-        )
-
-        invoices = cursor.fetchall()
-
-        # Calculate 12-month average
-        cursor.execute(
-            """
-            SELECT AVG(total_amount) as average_value
-            FROM invoices
-            WHERE account_number = %s
-            AND issue_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
-        """,
-            (account_number,),
-        )
-
-        average_result = cursor.fetchone()
-        average_value = (
-            float(average_result["average_value"])
-            if average_result["average_value"]
-            else 0
-        )
-
-        cursor.close()
-        conn.close()
-
-        # Prepare chart data (reversed for chronological order)
-        invoices.reverse()
-        labels = [invoice["issue_date"].strftime("%Y-%m") for invoice in invoices]
-        amounts = [float(invoice["total_amount"]) for invoice in invoices]
+        labels = [
+            inv["issue_date"].strftime("%Y-%m")
+            for inv in invoices_list
+            if inv["issue_date"]
+        ]
+        amounts = [
+            float(inv["total_amount"])
+            for inv in invoices_list
+            if inv["total_amount"] is not None
+        ]
 
         return render_template(
             "account_details.html",
@@ -462,7 +300,7 @@ def faturas():
 @login_required
 def quitadas():
     try:
-        is_admin = session.get("is_admin", 0)  # Now properly imported
+        is_admin = session.get("is_admin", 0)
         return render_template(
             "quitadas.html", is_admin=is_admin, contas_blm=Config.BLM_CONTRACT_NUMBERS
         )

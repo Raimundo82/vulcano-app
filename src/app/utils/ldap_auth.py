@@ -2,9 +2,8 @@ import ssl
 
 from ldap3 import ALL, Connection, Server, Tls
 
-from app.db import get_connection
-
 from ..config import Config
+from ..domain.repositories import UserRepository
 
 
 def authenticate_user(username, password):
@@ -22,12 +21,7 @@ def authenticate_user(username, password):
         print(f"Tentando autenticar o usuário: {username}")
 
         # Verifica se o usuário existe na tabela de usuários do banco de dados
-        conn = get_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
-        user = cursor.fetchone()
-        cursor.close()
-        conn.close()
+        user = UserRepository().get_by_username(username)
 
         if not user:
             print(f"Usuário {username} não encontrado no banco de dados.")
@@ -67,22 +61,21 @@ def authenticate_user(username, password):
                 search_base,
                 search_filter,
                 attributes=["displayName", "mail", "givenName", "sn"],
-            )  # Add other attributes you need
+            )
 
-            # In ldap_auth.py, modify the return statement:
             if len(conn.entries) > 0:
                 user_entry = conn.entries[0]
                 display_name = (
                     str(user_entry.displayName)
                     if "displayName" in user_entry
                     else username
-                )  # Fallback to username if displayName not available
+                )
 
                 print(f"Utilizador {username} encontrado no LDAP.")
                 return {
                     "username": username,
                     "display_name": display_name,
-                    "is_admin": user["is_admin"],
+                    "is_admin": user.is_admin,
                 }
             else:
                 print(f"Utilizador {username} não encontrado no LDAP.")

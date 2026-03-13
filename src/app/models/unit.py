@@ -1,59 +1,29 @@
-import mysql.connector
+from ..domain.repositories import UnitRepository
 
-from ..db import get_connection
+_repo = UnitRepository()
 
 
 def get_units():
-    try:
-        with get_connection() as conn:
-            with conn.cursor(dictionary=True) as cursor:
-                cursor.execute("SELECT * FROM unidades ORDER BY num_cliente, unidade")
-                return cursor.fetchall()
-    except mysql.connector.Error as err:
-        raise err
+    return [u.to_dict() for u in _repo.get_all()]
 
 
 def add_unit(num_cliente, unidade, poc, email_poc):
-    try:
-        with get_connection() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute(
-                    """
-                    INSERT INTO unidades (num_cliente, unidade, poc, email_poc)
-                    VALUES (%s, %s, %s, %s)
-                """,
-                    (num_cliente, unidade, poc, email_poc),
-                )
-                conn.commit()
-                return cursor.lastrowid
-    except mysql.connector.Error as err:
-        raise err
+    unit = _repo.create(num_cliente, unidade, poc, email_poc)
+    return unit.id
 
 
 def edit_unit(unit_id, num_cliente, unidade, poc, email_poc):
-    try:
-        with get_connection() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute(
-                    """
-                    UPDATE unidades
-                    SET num_cliente = %s, unidade = %s, poc = %s, email_poc = %s
-                    WHERE id = %s
-                """,
-                    (num_cliente, unidade, poc, email_poc, unit_id),
-                )
-                conn.commit()
-                return True
-    except mysql.connector.Error as err:
-        raise err
+    return (
+        _repo.update(
+            unit_id,
+            num_cliente=num_cliente,
+            unidade=unidade,
+            poc=poc,
+            email_poc=email_poc,
+        )
+        is not None
+    )
 
 
 def delete_unit(unit_id):
-    try:
-        with get_connection() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute("DELETE FROM unidades WHERE id = %s", (unit_id,))
-                conn.commit()
-                return True
-    except mysql.connector.Error as err:
-        raise err
+    return _repo.delete(unit_id)
