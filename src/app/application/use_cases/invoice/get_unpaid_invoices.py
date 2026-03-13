@@ -1,5 +1,6 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
+from ....domain.entities.invoice import Invoice
 from ....domain.repositories.invoice_repository import InvoiceRepository
 
 
@@ -9,7 +10,13 @@ class GetUnpaidInvoicesUseCase:
     def __init__(self, invoice_repository: InvoiceRepository) -> None:
         self._repo = invoice_repository
 
-    def execute(self) -> List[Dict]:
+    def execute(self) -> List[Tuple[Invoice, float]]:
+        """
+        Return a list of ``(invoice, average)`` pairs for all unpaid invoices.
+
+        The *average* is the 12-month rolling average of ``total_amount`` for
+        the invoice's account, used to highlight anomalous charges.
+        """
         invoices = self._repo.get_all_unpaid()
         result = []
         for invoice in invoices:
@@ -18,7 +25,5 @@ class GetUnpaidInvoicesUseCase:
                 if invoice.account_number
                 else 0.0
             )
-            entry = invoice.__dict__.copy()
-            entry["media"] = average
-            result.append(entry)
+            result.append((invoice, average))
         return result

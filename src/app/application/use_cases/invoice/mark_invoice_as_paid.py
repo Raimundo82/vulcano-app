@@ -1,5 +1,4 @@
-from datetime import datetime
-
+from ....domain.entities.invoice import Invoice
 from ....domain.repositories.invoice_repository import InvoiceRepository
 
 
@@ -13,7 +12,14 @@ class MarkInvoiceAsPaidUseCase:
         """
         Mark the invoice identified by *invoice_number* as paid.
 
-        Returns True when the record was updated, False otherwise.
+        Delegates to the ``Invoice.mark_as_paid()`` domain method so that
+        business rules (e.g. cannot re-pay) are enforced at the entity level.
+
+        Returns True when the record was updated, False when not found.
         """
-        quita_date = datetime.now()
-        return self._repo.mark_as_paid(invoice_number, quita_date)
+        invoice = self._repo.get_by_invoice_number(invoice_number)
+        if invoice is None:
+            return False
+        invoice.mark_as_paid()
+        self._repo.update(invoice)
+        return True

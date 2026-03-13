@@ -2,7 +2,7 @@ import os
 import shutil
 from typing import List
 
-from ....domain.entities.invoice import Invoice
+from ....domain.entities.invoice import BillingPeriod, Invoice, InvoiceType, PaymentStatus
 from ....domain.repositories.invoice_repository import InvoiceRepository
 from ...ports.invoice_extractor_port import InvoiceExtractorPort
 
@@ -49,8 +49,6 @@ class ProcessInvoicesUseCase:
 
             total_amount = float(data["total_amount"]) if data["total_amount"] else 0.0
             data["total_amount"] = total_amount
-            data.setdefault("sent_validar", False)
-            data.setdefault("quitar", False)
 
             year = data.get("invoice_period_year") or "unknown"
             month = data.get("invoice_period_month") or "unknown"
@@ -71,22 +69,27 @@ class ProcessInvoicesUseCase:
 
             shutil.move(pdf_path, destination_path)
 
+            billing_period = (
+                BillingPeriod(month=month, year=year)
+                if month != "unknown" and year != "unknown"
+                else None
+            )
+            invoice_type = InvoiceType(data["invoice_type"])
+
             invoice = Invoice(
                 invoice_number=data["invoice_number"],
-                invoice_type=data["invoice_type"],
-                reference_number=data.get("reference_number"),
+                invoice_type=invoice_type,
+                account_number=data.get("account_number", ""),
+                billing_period=billing_period,
                 issue_date=data.get("issue_date"),
-                taxpayer_number=data.get("taxpayer_number"),
-                account_number=data.get("account_number"),
+                reference_number=data.get("reference_number"),
+                cvp=data.get("cvp"),
+                total_amount=data.get("total_amount"),
+                amount_to_pay=data.get("amount_to_pay"),
                 client=data.get("client"),
                 address=data.get("address"),
-                cvp=data.get("cvp"),
-                invoice_period_month=data.get("invoice_period_month"),
-                invoice_period_year=data.get("invoice_period_year"),
-                amount_to_pay=data.get("amount_to_pay"),
-                total_amount=data.get("total_amount"),
-                sent_validar=data.get("sent_validar", False),
-                quitar=data.get("quitar", False),
+                taxpayer_number=data.get("taxpayer_number"),
+                payment_status=PaymentStatus.PENDING,
                 pdffile=data.get("pdffile"),
             )
             self._repo.save(invoice)

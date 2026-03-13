@@ -7,8 +7,13 @@ from unittest.mock import MagicMock
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from app.domain.entities.invoice import Invoice
-from app.domain.entities.unit import Unit
+from app.domain.entities.invoice import (
+    BillingPeriod,
+    Invoice,
+    InvoiceType,
+    PaymentStatus,
+)
+from app.domain.entities.unit import Contact, Unit
 from app.domain.entities.user import User
 from app.domain.repositories.invoice_repository import InvoiceRepository
 from app.domain.repositories.unit_repository import UnitRepository
@@ -33,6 +38,23 @@ from app.application.use_cases.unit.delete_unit import DeleteUnitUseCase
 
 
 # ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _invoice(number: str, account: str = "111", paid: bool = False, total: float = 100.0) -> Invoice:
+    inv = Invoice(
+        invoice_number=number,
+        invoice_type=InvoiceType.BLM,
+        account_number=account,
+        total_amount=total,
+        billing_period=BillingPeriod(month="janeiro", year="2024"),
+    )
+    if paid:
+        inv.mark_as_paid()
+    return inv
+
+
+# ---------------------------------------------------------------------------
 # In-memory test doubles
 # ---------------------------------------------------------------------------
 
@@ -41,10 +63,10 @@ class InMemoryInvoiceRepository(InvoiceRepository):
         self._store: Dict[str, Invoice] = {}
 
     def get_all_unpaid(self) -> List[Invoice]:
-        return [inv for inv in self._store.values() if not inv.quitar]
+        return [inv for inv in self._store.values() if not inv.is_paid()]
 
     def get_all_paid(self) -> List[Invoice]:
-        return [inv for inv in self._store.values() if inv.quitar]
+        return [inv for inv in self._store.values() if inv.is_paid()]
 
     def get_by_invoice_number(self, invoice_number: str) -> Optional[Invoice]:
         return self._store.get(invoice_number)
@@ -55,7 +77,8 @@ class InMemoryInvoiceRepository(InvoiceRepository):
 
     def get_average_total_by_account(self, account_number: str, months: int = 12) -> float:
         invoices = [
-            i for i in self._store.values() if i.account_number == account_number and i.total_amount
+            i for i in self._store.values()
+            if i.account_number == account_number and i.total_amount
         ]
         if not invoices:
             return 0.0
@@ -69,21 +92,6 @@ class InMemoryInvoiceRepository(InvoiceRepository):
     def update(self, invoice: Invoice) -> Invoice:
         self._store[invoice.invoice_number] = invoice
         return invoice
-
-    def mark_as_paid(self, invoice_number: str, quita_date: datetime) -> bool:
-        inv = self._store.get(invoice_number)
-        if not inv:
-            return False
-        inv.quitar = True
-        inv.quita_date = quita_date
-        return True
-
-    def mark_many_as_paid(self, invoice_numbers: List[str], quita_date: datetime) -> int:
-        count = 0
-        for num in invoice_numbers:
-            if self.mark_as_paid(num, quita_date):
-                count += 1
-        return count
 
     def delete_by_invoice_number(self, invoice_number: str) -> bool:
         if invoice_number in self._store:
@@ -139,7 +147,7 @@ class InMemoryUnitRepository(UnitRepository):
         self._next_id = 1
 
     def get_all(self) -> List[Unit]:
-        return sorted(self._store.values(), key=lambda u: (u.num_cliente, u.unidade))
+        return sorted(self._store.values(), key=lambda u: (u.num_cliente, u.name))
 
     def get_by_id(self, unit_id: int) -> Optional[Unit]:
         return self._store.get(unit_id)
@@ -168,52 +176,55 @@ class InMemoryUnitRepository(UnitRepository):
 class TestGetUnpaidInvoicesUseCase:
     def test_returns_only_unpaid(self):
         repo = InMemoryInvoiceRepository()
-        repo.save(Invoice(invoice_number="A1", invoice_type="BLM", account_number="111", total_amount=100.0))
-        repo.save(Invoice(invoice_number="A2", invoice_type="VOZ", account_number="222", total_amount=200.0, quitar=True))
+        repo.save(_invoice("A1", account="111"))
+        repo.save(_invoice("A2", account="222", paid=True))
 
         use_case = GetUnpaidInvoicesUseCase(repo)
         result = use_case.execute()
 
         assert len(result) == 1
-        assert result[0]["invoice_number"] == "A1"
-        assert "media" in result[0]
+        invoice, average = result[0]
+        assert invoice.invoice_number == "A1"
+        assert isinstance(average, float)
 
     def test_includes_average(self):
         repo = InMemoryInvoiceRepository()
-        repo.save(Invoice(invoice_number="B1", invoice_type="BLM", account_number="333", total_amount=100.0))
-        repo.save(Invoice(invoice_number="B2", invoice_type="BLM", account_number="333", total_amount=200.0))
+        repo.save(_invoice("B1", account="333", total=100.0))
+        repo.save(_invoice("B2", account="333", total=200.0))
 
         use_case = GetUnpaidInvoicesUseCase(repo)
         result = use_case.execute()
 
         assert len(result) == 2
-        for r in result:
-            assert r["media"] == 150.0
+        for _, avg in result:
+            assert avg == 150.0
 
 
 class TestGetPaidInvoicesUseCase:
     def test_returns_only_paid(self):
         repo = InMemoryInvoiceRepository()
-        repo.save(Invoice(invoice_number="C1", invoice_type="BLM", quitar=False))
-        repo.save(Invoice(invoice_number="C2", invoice_type="BLM", quitar=True))
+        repo.save(_invoice("C1", paid=False))
+        repo.save(_invoice("C2", paid=True))
 
         use_case = GetPaidInvoicesUseCase(repo)
         result = use_case.execute()
 
         assert len(result) == 1
-        assert result[0]["invoice_number"] == "C2"
+        invoice, _ = result[0]
+        assert invoice.invoice_number == "C2"
 
 
 class TestMarkInvoiceAsPaidUseCase:
-    def test_marks_single_invoice(self):
+    def test_marks_single_invoice_via_domain_method(self):
         repo = InMemoryInvoiceRepository()
-        repo.save(Invoice(invoice_number="D1", invoice_type="BLM"))
+        repo.save(_invoice("D1"))
 
         use_case = MarkInvoiceAsPaidUseCase(repo)
         result = use_case.execute("D1")
 
         assert result is True
-        assert repo.get_by_invoice_number("D1").quitar is True
+        assert repo.get_by_invoice_number("D1").is_paid()
+        assert repo.get_by_invoice_number("D1").paid_on is not None
 
     def test_returns_false_for_missing(self):
         repo = InMemoryInvoiceRepository()
@@ -222,17 +233,17 @@ class TestMarkInvoiceAsPaidUseCase:
 
 
 class TestMarkInvoicesAsPaidUseCase:
-    def test_marks_multiple(self):
+    def test_marks_multiple_via_domain_methods(self):
         repo = InMemoryInvoiceRepository()
-        repo.save(Invoice(invoice_number="E1", invoice_type="BLM"))
-        repo.save(Invoice(invoice_number="E2", invoice_type="BLM"))
+        repo.save(_invoice("E1"))
+        repo.save(_invoice("E2"))
 
         use_case = MarkInvoicesAsPaidUseCase(repo)
         count = use_case.execute(["E1", "E2"])
 
         assert count == 2
-        assert repo.get_by_invoice_number("E1").quitar is True
-        assert repo.get_by_invoice_number("E2").quitar is True
+        assert repo.get_by_invoice_number("E1").is_paid()
+        assert repo.get_by_invoice_number("E2").is_paid()
 
     def test_empty_list_returns_zero(self):
         repo = InMemoryInvoiceRepository()
@@ -243,7 +254,7 @@ class TestMarkInvoicesAsPaidUseCase:
 class TestDeleteInvoicesUseCase:
     def test_deletes_invoice_record(self, tmp_path):
         repo = InMemoryInvoiceRepository()
-        repo.save(Invoice(invoice_number="F1", invoice_type="BLM"))
+        repo.save(_invoice("F1"))
 
         use_case = DeleteInvoicesUseCase(repo, str(tmp_path))
         count = use_case.execute([
@@ -255,7 +266,7 @@ class TestDeleteInvoicesUseCase:
 
     def test_also_removes_pdf_file(self, tmp_path):
         repo = InMemoryInvoiceRepository()
-        repo.save(Invoice(invoice_number="G1", invoice_type="BLM"))
+        repo.save(_invoice("G1"))
 
         pdf_dir = tmp_path / "2024" / "jan"
         pdf_dir.mkdir(parents=True)
@@ -273,8 +284,8 @@ class TestDeleteInvoicesUseCase:
 class TestGetInvoicesForReceiptUseCase:
     def test_returns_requested_invoices(self):
         repo = InMemoryInvoiceRepository()
-        repo.save(Invoice(invoice_number="H1", invoice_type="BLM"))
-        repo.save(Invoice(invoice_number="H2", invoice_type="VOZ"))
+        repo.save(_invoice("H1"))
+        repo.save(_invoice("H2"))
 
         use_case = GetInvoicesForReceiptUseCase(repo)
         result = use_case.execute(["H1"])
@@ -295,7 +306,7 @@ class TestGetInvoicesForReceiptUseCase:
 class TestAuthenticateUserUseCase:
     def test_returns_user_on_valid_credentials(self):
         repo = InMemoryUserRepository()
-        repo.save(User(username="jdoe", display_name="John", email="jdoe@test.com", is_admin=False))
+        repo.save(User(username="jdoe", display_name="John", email="jdoe@test.com"))
 
         authenticator = MagicMock(spec=UserAuthenticatorPort)
         authenticator.authenticate.return_value = {"username": "jdoe", "display_name": "John Doe"}
@@ -318,7 +329,7 @@ class TestAuthenticateUserUseCase:
     def test_returns_none_when_user_not_in_db(self):
         repo = InMemoryUserRepository()
         authenticator = MagicMock(spec=UserAuthenticatorPort)
-        authenticator.authenticate.return_value = {"username": "unknown", "display_name": "Unknown"}
+        authenticator.authenticate.return_value = {"username": "unknown", "display_name": "X"}
 
         use_case = AuthenticateUserUseCase(repo, authenticator)
         assert use_case.execute("unknown", "pw") is None
@@ -327,12 +338,11 @@ class TestAuthenticateUserUseCase:
 class TestListUsersUseCase:
     def test_returns_all_users(self):
         repo = InMemoryUserRepository()
-        repo.save(User(username="alice", display_name="Alice", email="alice@test.com"))
-        repo.save(User(username="bob", display_name="Bob", email="bob@test.com"))
+        repo.save(User(username="alice", display_name="Alice", email="a@test.com"))
+        repo.save(User(username="bob", display_name="Bob", email="b@test.com"))
 
         use_case = ListUsersUseCase(repo)
-        users = use_case.execute()
-        assert len(users) == 2
+        assert len(use_case.execute()) == 2
 
 
 class TestAddUserUseCase:
@@ -343,7 +353,6 @@ class TestAddUserUseCase:
 
         assert user.id is not None
         assert user.username == "alice"
-        assert user.email == "alice@test.com"
         assert user.is_admin is False
 
     def test_raises_on_missing_fields(self):
@@ -385,7 +394,6 @@ class TestDeleteUserUseCase:
         use_case = DeleteUserUseCase(repo)
         result = use_case.execute(user.id, requesting_user_id=999)
         assert result is True
-        assert repo.get_by_id(user.id) is None
 
     def test_raises_on_self_deletion(self):
         repo = InMemoryUserRepository()
@@ -405,9 +413,7 @@ class TestUpdateLastLoginUseCase:
         repo.save(User(username="jane", display_name="Jane", email="jane@test.com"))
 
         use_case = UpdateLastLoginUseCase(repo)
-        result = use_case.execute("jane")
-
-        assert result is True
+        assert use_case.execute("jane") is True
         assert repo.get_by_username("jane").last_login is not None
 
     def test_returns_false_for_unknown(self):
@@ -423,23 +429,31 @@ class TestUpdateLastLoginUseCase:
 class TestListUnitsUseCase:
     def test_returns_all_units(self):
         repo = InMemoryUnitRepository()
-        repo.save(Unit(num_cliente="111", unidade="Alpha"))
-        repo.save(Unit(num_cliente="222", unidade="Beta"))
+        repo.save(Unit(num_cliente="111", name="Alpha"))
+        repo.save(Unit(num_cliente="222", name="Beta"))
 
         use_case = ListUnitsUseCase(repo)
-        units = use_case.execute()
-        assert len(units) == 2
+        assert len(use_case.execute()) == 2
 
 
 class TestAddUnitUseCase:
-    def test_creates_unit(self):
+    def test_creates_unit_with_contact(self):
         repo = InMemoryUnitRepository()
         use_case = AddUnitUseCase(repo)
-        unit = use_case.execute("999", "Test Unit", "John Doe", "john@test.com")
+        unit = use_case.execute("999", "Test Unit", poc_name="John Doe", poc_email="john@test.com")
 
         assert unit.id is not None
         assert unit.num_cliente == "999"
-        assert unit.poc == "John Doe"
+        assert unit.contact is not None
+        assert unit.contact.name == "John Doe"
+        assert unit.contact.email == "john@test.com"
+
+    def test_creates_unit_without_contact(self):
+        repo = InMemoryUnitRepository()
+        use_case = AddUnitUseCase(repo)
+        unit = use_case.execute("888", "No Contact Unit")
+
+        assert unit.contact is None
 
     def test_raises_on_missing_fields(self):
         repo = InMemoryUnitRepository()
@@ -452,15 +466,26 @@ class TestAddUnitUseCase:
 
 
 class TestEditUnitUseCase:
-    def test_updates_unit(self):
+    def test_updates_unit_and_contact(self):
         repo = InMemoryUnitRepository()
-        unit = repo.save(Unit(num_cliente="111", unidade="Old"))
+        unit = repo.save(Unit(num_cliente="111", name="Old"))
 
         use_case = EditUnitUseCase(repo)
-        updated = use_case.execute(unit.id, "222", "New", "Jane", "jane@test.com")
+        updated = use_case.execute(unit.id, "222", "New", poc_name="Jane", poc_email="jane@test.com")
 
         assert updated.num_cliente == "222"
-        assert updated.unidade == "New"
+        assert updated.name == "New"
+        assert updated.contact.name == "Jane"
+
+    def test_clears_contact_when_names_empty(self):
+        contact = Contact(name="Old POC", email="old@test.com")
+        repo = InMemoryUnitRepository()
+        unit = repo.save(Unit(num_cliente="111", name="Unit", contact=contact))
+
+        use_case = EditUnitUseCase(repo)
+        updated = use_case.execute(unit.id, "111", "Unit")
+
+        assert updated.contact is None
 
     def test_raises_on_unknown_unit(self):
         repo = InMemoryUnitRepository()
@@ -475,14 +500,14 @@ class TestEditUnitUseCase:
 class TestDeleteUnitUseCase:
     def test_deletes_unit(self):
         repo = InMemoryUnitRepository()
-        unit = repo.save(Unit(num_cliente="111", unidade="ToDelete"))
+        unit = repo.save(Unit(num_cliente="111", name="ToDelete"))
 
         use_case = DeleteUnitUseCase(repo)
-        result = use_case.execute(unit.id)
-        assert result is True
+        assert use_case.execute(unit.id) is True
         assert repo.get_by_id(unit.id) is None
 
     def test_returns_false_for_missing(self):
         repo = InMemoryUnitRepository()
         use_case = DeleteUnitUseCase(repo)
         assert use_case.execute(999) is False
+

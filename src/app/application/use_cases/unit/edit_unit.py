@@ -1,4 +1,4 @@
-from ....domain.entities.unit import Unit
+from ....domain.entities.unit import Contact, Unit
 from ....domain.repositories.unit_repository import UnitRepository
 
 
@@ -12,28 +12,34 @@ class EditUnitUseCase:
         self,
         unit_id: int,
         num_cliente: str,
-        unidade: str,
-        poc: str = "",
-        email_poc: str = "",
+        name: str,
+        poc_name: str = "",
+        poc_email: str = "",
     ) -> Unit:
         """
         Update the unit identified by *unit_id*.
 
-        Raises :class:`ValueError` when *num_cliente* or *unidade* are blank.
+        *poc_name* and *poc_email* replace the existing :class:`Contact`; pass
+        empty strings to remove the contact.
+
+        Raises :class:`ValueError` when *num_cliente* or *name* are blank.
         Raises :class:`LookupError` when the unit is not found.
         """
         num_cliente = num_cliente.strip()
-        unidade = unidade.strip()
+        name = name.strip()
 
-        if not all([num_cliente, unidade]):
-            raise ValueError("num_cliente and unidade are required")
+        if not all([num_cliente, name]):
+            raise ValueError("num_cliente and name are required")
 
         unit = self._repo.get_by_id(unit_id)
         if unit is None:
             raise LookupError(f"Unit with id {unit_id} not found")
 
+        poc_name = poc_name.strip()
+        poc_email = poc_email.strip().lower()
+        contact = Contact(name=poc_name, email=poc_email) if poc_name or poc_email else None
+
         unit.num_cliente = num_cliente
-        unit.unidade = unidade
-        unit.poc = poc.strip() or None
-        unit.email_poc = email_poc.strip().lower() or None
+        unit.name = name
+        unit.contact = contact
         return self._repo.update(unit)

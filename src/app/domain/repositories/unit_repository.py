@@ -9,7 +9,7 @@ class UnitRepository(ABC):
 
     @abstractmethod
     def get_all(self) -> List[Unit]:
-        """Return all units ordered by num_cliente then unidade."""
+        """Return all units ordered by num_cliente then name."""
 
     @abstractmethod
     def get_by_id(self, unit_id: int) -> Optional[Unit]:
