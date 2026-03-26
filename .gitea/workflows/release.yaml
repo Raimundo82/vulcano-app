@@ -26,21 +26,19 @@ jobs:
       - name: Log in to registry
         run: docker login ${{ vars.REGISTRY_SERVER }} -u ${{ vars.USERNAME }} -p ${{ secrets.PACKAGE_UPLOAD_TOKEN }}
 
-      - name: Extract TAG
+      - name: Promote previous latest to stable
         run: |
-          REF=${{ gitea.ref }}
-          TAG=${REF##refs/tags/v}
-          echo "TAG=$TAG"
-          echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "Promoting previous latest to stable..."
+          docker pull ${{ vars.REGISTRY_SERVER }}/marinha-si/vulcano-app:latest || echo "No previous latest found"
+          docker tag ${{ vars.REGISTRY_SERVER }}/marinha-si/vulcano-app:latest ${{ vars.REGISTRY_SERVER }}/marinha-si/vulcano-app:stable || true
+          docker push ${{ vars.REGISTRY_SERVER }}/marinha-si/vulcano-app:stable || true
 
       - name: Build image
         run: |
-          docker build -t ${{ vars.REGISTRY_SERVER }}/marinha-si/vulcano-app:$TAG .
-          docker tag ${{ vars.REGISTRY_SERVER }}/marinha-si/vulcano-app:$TAG ${{ vars.REGISTRY_SERVER }}/marinha-si/vulcano-app:latest
+          docker build -t ${{ vars.REGISTRY_SERVER }}/marinha-si/vulcano-app:latest .
 
       - name: Push images
         run: |
-          docker push ${{ vars.REGISTRY_SERVER }}/marinha-si/vulcano-app:$TAG
           docker push ${{ vars.REGISTRY_SERVER }}/marinha-si/vulcano-app:latest
 
       - name: Download Kubectl binaries
@@ -55,11 +53,6 @@ jobs:
       - name: Apply pvc, deployment, service, route
         run: kubectl --kubeconfig=/tmp/config -n ${{ vars.DSI_PAAS_NS }} apply -f k8s/app/
 
-      - name: Update deployment image
-        env:
-          GITEA_REF: ${{ gitea.ref }}
-          DEPLOYMENT_NAME: vulcano-app
-
+      - name: Restart deployment to pull new latest
         run: |
-          echo "TAG=$TAG"
-          kubectl --kubeconfig=/tmp/config -n ${{ vars.DSI_PAAS_NS }} set image deployment/vulcano-app vulcano-app=devops-01.marinha.pt/marinha-si/vulcano-app:$TAG
+          kubectl --kubeconfig=/tmp/config -n ${{ vars.DSI_PAAS_NS }} rollout restart deployment/vulcano-app
