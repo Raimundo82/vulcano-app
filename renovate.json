@@ -1,0 +1,24 @@
+{
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "extends": [
+        "local>marinha-si/renovate-config"
+    ],
+    "enabledManagers": [
+        "poetry"
+    ],
+    "rangeStrategy": "bump",
+    "includePaths": [
+        "pyproject.toml"
+    ],
+    "packageRules": [
+        {
+            "matchUpdateTypes": [
+                "minor",
+                "patch",
+                "pin",
+                "digest"
+            ],
+            "automerge": true
+        }
+    ]
+}

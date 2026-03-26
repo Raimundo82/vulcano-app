@@ -1,0 +1,17 @@
+name: sonarqube pull request delete
+
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  sonarqube-delete-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Invoke SonarQube api/project_pull_requests/delete
+        shell: bash
+        run: |
+          curl  -X POST \
+            '${{ vars.SONAR_HOST_URL }}/api/project_pull_requests/delete?project=vulcano-app&pullRequest=${{ gitea.event.number }}' \
+            --header 'Authorization: Bearer ${{ secrets.SONAR_TOKEN }}'

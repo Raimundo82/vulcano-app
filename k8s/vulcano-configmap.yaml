@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vulcano-configmap
+  namespace: dsi-paas
+data:
+  MYSQL_DATABASE: vulcano_db
+  DB_NAME: vulcano_db
+  DB_HOST: vulcano-db-service
+  PROCESSED_DIR: /app/processed
+  PDFS_DIR: /app/pdfs

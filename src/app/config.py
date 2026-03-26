@@ -1,0 +1,197 @@
+import os
+
+
+class Config:
+    SECRET_KEY = os.getenv("SECRET_KEY")
+    MAX_CONTENT_LENGTH = 200 * 1024 * 1024  # 200MB
+    TARIFARIO = "VPNCC-M-MIN_DEF_"
+
+    BLM_CONTRACT_NUMBERS = [
+        "1439471962",  # DIREÇÃO DE TECNOLOGIAS DE INFORMAÇÃO E COMUNICAÇÕES - Dados
+        "1487672087",  # COMANDO NAVAL (DADOS)
+        "1472073010",  # INSTITUTO HIDROGRÁFICO
+        "1423073116",  # DIRECÇÃO DE FORMAÇÃO
+        "1425673383",  # GABINETE DO CEMA (DADOS)
+        "1137076440",  # DIRECÇÃO DE APOIO  SOCIAL
+        "1455873749",  # SUPERINTENDÊNCIA DA INFORMAÇÃO
+        "1429574036",  # UNIDADE DE APOIO ÀS INSTALAÇÕES CENTRAIS DE MARINHA
+        "1463473883",  # DIRECÇÃO DE ANALISE E GESTÃO  DE INFORMAÇÃO
+        "1485274019",  # DIRECÇÃO JURÍDICA
+        "1454274018",  # DIRECÇÃO DE PESSOAL
+        "1418575578",  # ESQUADRILHA DE HELICÓPTEROS
+        "1461874012",  # SF - GABINETE DO SUPERINTENDENTE
+        "1489374024",  # SF - DIREÇÃO ADMINISTRAÇÃO FINANCEIRA
+        "1472474022",  # SUPERINTENDÊNCIA DO PESSOAL
+        "1418574035",  # ESTADO MAIOR DA ARMADA
+        "1411174128",  # MESSE MARINHA CASCAIS
+        "1475174124",  # DIRECÇÃO DE INFRA ESTRUTURAS
+        "1483174123",  # INSPECÇÃO GERAL DA MARINHA
+        "1459574281",  # SUPERINTENDÊNCIA DO MATERIAL
+        "1417774408",  # BASE NAVAL LISBOA
+        "1428174408",  # COMANDO DA ZONA MARITIMA DOS AÇORES
+        "1481674297",  # DIRECÇÃO DE NAVIOS
+        "1452474398",  # INSTITUTO HIDROGRÁFICO
+        "1462174620",  # DIREÇÃO DE  ABASTECIMENTO
+        "1412074927",  # ESQUADRILHA DE SUBSUPERFÍCIE
+        "1476275780",  # NAVIO AZORES OCEAN
+        "1474775996",  # ESCOLA NAVAL
+        "1467376045",  # CENTRO MEDICINA  NAVAL
+        "1428376049",  # CORPO  DE FUZILEIROS
+        "1467376043",  # CENTRO INTEGRADO DE TREINO E AVALIAÇÃO NAVAL
+        "1444876061",  # NRP DOURO
+        "1403876064",  # NRP  ARPÃO
+        "1409376048",  # ESCOLA DE TECNOLOGIAS NAVAIS
+        "1457876060",  # NRP TEJO
+        "1416775993",  # NRP  ANDROMEDA
+        "1489075993",  # NRP BARTOLOMEU DIAS
+        "1479275963",  # NRP  ESCORPIAO
+        "1443775993",  # NRP FIGUEIRA DA FOZ
+        "1477075995",  # NRP  HIDRA
+        "1494075998",  # NRP PEGASO
+        "1459376040",  # NRP POLAR
+        "1443775994",  # NRP RIO MINHO
+        "1453775995",  # NRP SAGRES
+        "1423775999",  # NRP VIANA DO CASTELO
+        "1444775991",  # NRP ZARCO
+        "1472775996",  # NRP SAGITÁRIO
+        "1449376040",  # DIREÇÃO DE TRANSPORTES
+        "1455376045",  # NRP SINES
+        "1465276066",  # NRP SETÚBAL
+        "1473276061",  # NRP TRIDENTE
+        "1413876063",  # DIREÇÃO DE SAÚDE
+        "1455276063",  # NRP DRAGÃO
+        "1417876061",  # NRP CASSIOPEIA
+        "1465976213",  # NRP ZAIRE
+        "1164264273",  # NRP ÁLVARES  CABRAL
+        "1443276528",  # SF - DIRECÇÃO DE CONTABILIDADE E OPERAÇÕES FINANCEIRAS
+        "1488876384",  # DIRECÇÃO GERAL DA AUTORIDADE MARÍTIMA
+        "1471376841",  # SF - DIRECÇÃO DE CONTROLO FINANCEIRO
+        "1407676854",  # ESCOLA DE  FUZILEIROS
+        "1419276842",  # CENTRO DE EXPERIMENTAÇÃO OPERACIONAL DA MARINHA
+        "1459577163",  # DIREÇÃO CULTURAL DA  MARINHA
+        "1462976729",  # CÉLULA DE INOVAÇÃO E EXPERIMENTAÇÃO OPERACIONAL DE SISTEMAS NÃO TRIPULADOS
+        "1471376841",  # SF - DIRECÇÃO DE CONTROLO FINANCEIRO
+        "1447279025",  # NRP D. FRANCISCO DE ALMEIDA
+        "1495776179",  # NRP ORION
+    ]
+
+    VOZ_CONTRACT_NUMBERS = [
+        "1427973991",
+        "1445769058",
+        "1435769053",
+        "1494263296",
+        "1494062899",
+        "1466769056",
+        "1437769056",
+        "1404869059",
+        "1463869053",
+        "1407769051",
+        "1476769050",
+        "1446769054",
+        "1423369172",
+        "1480369176",
+        "1481369176",
+        "1455269174",
+        "1480369178",
+        "1467269170",
+        "1482369175",
+        "1457269171",
+        "1436269174",
+        "1402369179",
+        "1465269171",
+        "1486769050",
+        "1405269182",
+        "1428269182",
+        "1446269184",
+        "1406269181",
+        "1461369171",
+        "1436269186",
+        "1450369174",
+        "1435269181",
+        "1433369176",
+        "1458269188",
+        "1465269185",
+        "1435269186",
+        "1456269189",
+        "1431469620",
+        "1466969879",
+        "1419770173",
+        "1460770685",
+        "1456670688",
+        "1468071272",
+        "1451071301",
+        "1484773166",
+        "1458769053",
+        "1407769050",
+        "1467269176",
+        "1468769056",
+        "1457769054",
+        "1465769052",
+        "1434869057",
+        "1466769058",
+        "1483269170",
+        "1458269189",
+        "1451369170",
+        "1426269185",
+        "1432369177",
+        "1446269182",
+        "1444269182",
+        "1456570791",
+        "1472670835",
+        "1445769051",
+        "1454869052",
+        "1450369177",
+        "1486269171",
+        "1466269188",
+        "1465869531",
+        "1448069631",
+        "1468369621",
+        "1453269832",
+        "1441969852",
+        "1400070682",
+        "1461770680",
+        "1400871978",
+        "1411871971",
+        "1470671973",
+        "1460671970",
+        "1431671974",
+        "1401871978",
+        "1453073498",
+        "1423869054",
+        "1482869050",
+        "1459769055",
+        "1430868611",
+        "1473275782",
+        "1469276846",
+    ]
+
+    # MySQL configurations
+    MYSQL_HOST = os.getenv("DB_HOST", "db")
+    MYSQL_USER = os.getenv("DB_USER", "vulcano")
+    MYSQL_PASSWORD = os.getenv("DB_PASSWORD")
+    MYSQL_DB = os.getenv("DB_NAME", "vulcano_db")
+    MYSQL_CHARSET = "utf8mb4"
+
+    # LDAP configurations
+    LDAP_HOST = "n-dom-1.marinha.pt"
+    LDAP_PORT = 636
+    LDAP_BASE_DN = "OU=Marinha,dc=marinha,dc=pt"
+    LDAP_USER_ATTRIBUTE = "sAMAccountName"
+    LDAP_USERNAME_NET = "@marinha.pt"
+    LDAP_SSL = True
+    LDAP_TLS = False
+    LDAP_START_TLS = True
+
+    # Paths
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    PROJECT_ROOT = os.path.abspath(os.path.join(BASE_DIR, "..", ".."))
+    PROCESSED_DIR = os.getenv("PROCESSED_DIR", os.path.join(PROJECT_ROOT, "processed"))
+    PDFS_DIR = os.getenv("PDFS_DIR", os.path.join(PROJECT_ROOT, "pdfs"))
+
+
+class DevelopmentConfig(Config):
+    SECRET_KEY = "dev-key"  # Only for development!
+
+
+class ProductionConfig(Config):
+    pass  # Requires env variable
