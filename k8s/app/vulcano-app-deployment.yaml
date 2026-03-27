@@ -32,7 +32,8 @@ spec:
               mountPath: /data
       containers:
         - name: vulcano-app
-          image: devops-01.marinha.pt/marinha-si/vulcano-app:0.1.2
+          image: devops-01.marinha.pt/marinha-si/vulcano-app:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5000
               name: http
