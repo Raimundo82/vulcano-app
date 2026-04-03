@@ -11,7 +11,7 @@ The application uses two persistent directories mounted via PVC:
 - `/app/pdfs` → PVC subPath: `pdfs`
 - `/app/processed` → PVC subPath: `processed`
 
-These directories are **not part of the Docker image**.  
+These directories are **not part of the Docker image**.
 They reside in a PersistentVolumeClaim (PVC) and are mounted at runtime.
 
 Updating the image **does not modify** their contents.
@@ -95,10 +95,10 @@ vulcano-db-64455bcb8f-p2vln
 
 Credentials (from Secret):
 
-- root password: vulcano_password  
-- user: vulcano  
-- password: vulcano_password  
-- database: vulcano  
+- root password: vulcano_password
+- user: vulcano
+- password: vulcano_password
+- database: vulcano
 
 ---
 
@@ -156,9 +156,9 @@ The Deployment will recreate it automatically.
 
 ## Notes
 
-- PVC data persists even if pods are deleted  
-- Image updates do not affect PVC data  
-- Use an initContainer for automated cleanup if needed  
-- Use root user for full database replacement  
+- PVC data persists even if pods are deleted
+- Image updates do not affect PVC data
+- Use an initContainer for automated cleanup if needed
+- Use root user for full database replacement
 
 ---
