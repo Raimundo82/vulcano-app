@@ -12,7 +12,7 @@ dependencies = [
     "pdfkit (==1.0.0)",
     "pymupdf (==1.26.5)",
     "python-docx (==1.2.0)",
-    "gunicorn (>=23.0.0,<24.0.0)",
+    "gunicorn (>=25.3.0,<25.3.1)",
     "docx (>=0.2.4,<0.3.0)",
 ]
 
